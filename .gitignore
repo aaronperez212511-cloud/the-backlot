@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/generated/
+.env
+.env.*
+!.env.example
+*.egg-info/
+.pytest_cache/
+node_modules/
+.DS_Store
+*.log
+credentials/
+*.key.json
+service-account*.json

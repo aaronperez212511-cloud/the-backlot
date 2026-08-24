@@ -1,0 +1,7 @@
+numpy>=1.26
+pandas>=2.2
+clickhouse-connect>=0.7
+mcp-clickhouse>=0.1
+google-adk>=1.0
+google-genai>=1.0
+python-dotenv>=1.0
