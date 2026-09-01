@@ -83,6 +83,43 @@ class FleetTrace:
         """ADK `before_tool_callback` signature. Returning None runs the tool."""
         return self._observe(tool, args, tool_context)
 
+    def after(
+        self,
+        tool: BaseTool,
+        args: dict[str, Any],
+        tool_context: ToolContext,
+        tool_response: Any = None,
+    ) -> None:
+        """ADK `after_tool_callback`. Records what a specialist actually said.
+
+        Recording only the calls turned out not to be enough: when a
+        post-mortem reported "no royalty issues" while the database held two
+        real underpayments, the trace showed Chain of Title running exactly the
+        right queries and nothing about what it concluded from them — so there
+        was no way to tell whether the specialist got it wrong or the
+        orchestrator dropped its finding. Capturing the reply makes that
+        answerable instead of a guess.
+        """
+        if tool.name not in SPECIALISTS:
+            return None
+        session_id = _root_session.get() or self._last_root
+        if not session_id:
+            return None
+        text = tool_response
+        if isinstance(text, dict):
+            text = text.get("result", text)
+        self._record(
+            session_id,
+            {
+                "t": time.time(),
+                "agent": tool.name,
+                "tool": tool.name,
+                "kind": "reply",
+                "detail": str(text)[:2000],
+            },
+        )
+        return None
+
     def _observe(
         self, tool: BaseTool, tool_args: dict[str, Any], tool_context: ToolContext
     ) -> Optional[dict[str, Any]]:

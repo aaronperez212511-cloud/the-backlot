@@ -245,7 +245,7 @@ const $ = s => document.querySelector(s);
 const feed = $("#feed");
 const APP = "orchestrator";
 const uid = "console-" + Math.random().toString(36).slice(2, 9);
-let sid = null, busy = false;
+let sid = null, busy = false, traceOffset = 0;
 
 const esc = s => (s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
@@ -289,6 +289,7 @@ function drawPresets() {
 
 async function newSession() {
   sid = "s-" + Date.now();
+  traceOffset = 0;
   const r = await fetch(`/adk/apps/${APP}/users/${uid}/sessions/${sid}`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
   });
@@ -381,10 +382,17 @@ async function ask(text) {
     // /run returns only Control Room's own events, and AgentTool runs each
     // specialist in an isolated context — so their ClickHouse queries never
     // reach the session either. The server-side trace plugin captures them.
+    // The trace endpoint returns every step recorded for this session, so on a
+    // follow-up question it still carries the previous investigation's steps.
+    // Show only what this turn added.
     let steps = [];
     try {
       const tr = await fetch(`/api/trace/${sid}`);
-      if (tr.ok) steps = (await tr.json()).steps || [];
+      if (tr.ok) {
+        const all = (await tr.json()).steps || [];
+        steps = all.slice(traceOffset);
+        traceOffset = all.length;
+      }
     } catch { /* the answer still stands without its trace */ }
 
     turn.innerHTML = `<div class="you"><div class="who">OPS</div>${esc(text)}</div>
