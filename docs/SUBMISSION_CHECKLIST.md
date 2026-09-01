@@ -4,7 +4,7 @@
 
 ## Hard requirements from the official rules
 
-- [ ] **Hosted project URL** — required for judging and testing. `./deploy/deploy.sh` → Cloud Run. The rules require the project to run on web, Android or iOS; the Control Room console satisfies web.
+- [x] **Hosted project URL** — https://the-backlot-203953305168.us-central1.run.app (Cloud Run, `us-central1`). Verified live: a full cross-domain investigation runs against ClickHouse Cloud and Vertex AI from the deployed container. Satisfies the "must run on web" platform rule.
 - [ ] **Public GitHub repo**, open-source license detectable in the "About" section. MIT `LICENSE` is in place — the repo is currently **private** and must be flipped to public before submitting.
 - [ ] **Demo video**, ≤3:00, uploaded to YouTube or Vimeo and set **public**, English audio or English captions. Only the first 3 minutes are judged. Script: [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
 - [ ] **Text description** covering: features and functionality, technologies used, other data sources, and *"your findings and learnings while building"* — that last part is explicitly requested and easy to skip. Draft notes below.

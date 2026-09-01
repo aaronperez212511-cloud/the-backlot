@@ -1,0 +1,16 @@
+# What the SERVED app actually needs. The image ships only common/, agents/,
+# orchestrator/, web/ and server.py — the data generation and loading scripts
+# stay out, and so do pandas/numpy/clickhouse-connect, which only they use.
+# (clickhouse-connect still arrives transitively via mcp-clickhouse, which runs
+# as the agents' MCP subprocess inside the container.)
+#
+# Floors are the versions this was actually built and verified against; ceilings
+# are the next major. Do NOT exact-pin: an over-constrained file makes pip's
+# resolver backtrack for minutes and it can settle on a broken placeholder
+# release of google-adk instead of failing cleanly.
+google-adk>=2.7,<3
+google-genai>=2.19,<3
+mcp-clickhouse>=0.4,<1
+python-dotenv>=1.2,<2
+fastapi>=0.141,<1
+uvicorn>=0.52,<1

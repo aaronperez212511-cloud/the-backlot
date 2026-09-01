@@ -1,12 +1,8 @@
-# Pinned to the majors this project was built and verified against. google-adk
-# 2.x is required: the orchestrator uses AgentTool and McpToolset APIs whose
-# semantics differ in 1.x.
-numpy>=1.26,<3
-pandas>=2.2,<3
-clickhouse-connect>=0.8,<1
-mcp-clickhouse>=0.4,<1
-google-adk>=2.7,<3
-google-genai>=1.0,<2
-python-dotenv>=1.0,<2
-uvicorn>=0.30,<1
-fastapi>=0.115,<1
+# Full local/dev set: the served app plus the data generation, loading and
+# verification scripts. The Cloud Run image installs requirements-runtime.txt
+# instead, which omits the data tooling.
+-r requirements-runtime.txt
+
+numpy>=2.5,<3
+pandas>=3.0,<4
+clickhouse-connect>=1.7,<2
