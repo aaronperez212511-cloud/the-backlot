@@ -1,6 +1,8 @@
 from google.adk import Agent
 from google.adk.tools.agent_tool import AgentTool
 
+from common.trace_plugin import fleet_trace
+
 from agents.chain_of_title.agent import root_agent as chain_of_title_agent
 from agents.churn_early_warning.agent import root_agent as churn_early_warning_agent
 from agents.fraud_sentinel.agent import root_agent as fraud_sentinel_agent
@@ -78,4 +80,5 @@ root_agent = Agent(
         AgentTool(agent=performance_war_room_agent),
         AgentTool(agent=churn_early_warning_agent),
     ],
+    before_tool_callback=fleet_trace,
 )

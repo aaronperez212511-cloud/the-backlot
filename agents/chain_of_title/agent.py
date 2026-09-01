@@ -2,6 +2,7 @@ from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
 from common.context import BACKLOT_CONTEXT
+from common.trace_plugin import fleet_trace
 
 from .contract_intelligence import parse_rights_clause
 
@@ -80,4 +81,5 @@ root_agent = Agent(
     model="gemini-2.5-pro",
     instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset(), parse_rights_clause],
+    before_tool_callback=fleet_trace,
 )

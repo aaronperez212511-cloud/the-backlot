@@ -2,6 +2,7 @@ from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
 from common.context import BACKLOT_CONTEXT
+from common.trace_plugin import fleet_trace
 
 INSTRUCTION = """
 You are Ghost Ads, the live ad-insertion revenue-leak detector for The
@@ -41,4 +42,5 @@ root_agent = Agent(
     model="gemini-2.5-flash",
     instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset()],
+    before_tool_callback=fleet_trace,
 )

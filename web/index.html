@@ -169,6 +169,10 @@
     aside { display: none; }
     #feed { padding: 18px 16px; }
     footer { padding: 12px 16px 16px; }
+    /* Stack each trace step: at this width a 152px agent column leaves the
+       SQL a few characters wide, which is worse than no SQL at all. */
+    .step { flex-direction: column; gap: 4px; }
+    .step .ag { width: auto; }
   }
 </style>
 </head>
@@ -306,34 +310,25 @@ async function boot() {
 /* Turns the ADK event stream into something a human can audit: which
    specialist Control Room called, what SQL that specialist ran against
    ClickHouse, and what came back. */
-function renderSteps(events) {
+function renderSteps(raw) {
   const steps = [];
-  for (const ev of events) {
-    const author = ev.author || "?";
-    for (const p of (ev.content?.parts || [])) {
-      const fc = p.functionCall;
-      if (!fc) continue;
-      const a = fc.args || {};
-      if (AGENTS.some(([n]) => n === fc.name)) {
-        setAgent(fc.name, "active");
-        steps.push({ who: "control_room", kind: "consulted <b>" + fc.name + "</b>",
-                     body: a.request || a.query || a.input || "" });
-      } else if (fc.name === "run_query") {
-        steps.push({ who: author, kind: "ClickHouse query", sql: a.query || a.sql || "" });
-      } else if (fc.name === "parse_rights_clause") {
-        steps.push({ who: author, kind: "Gemini · contract clause → structured terms",
-                     body: a.clause_text || "" });
-      } else if (fc.name === "list_tables" || fc.name === "list_databases") {
-        steps.push({ who: author, kind: fc.name });
-      }
+  for (const st of raw) {
+    if (st.kind === "consult") {
+      setAgent(st.tool, "done");
+      steps.push({ who: st.agent, agent: st.tool,
+                   kind: "consulted <b>" + st.tool + "</b>", body: st.detail });
+    } else if (st.kind === "query") {
+      steps.push({ who: st.agent, kind: "ClickHouse query", sql: st.detail });
+    } else if (st.kind === "gemini") {
+      steps.push({ who: st.agent, body: st.detail,
+                   kind: "Gemini · contract clause → structured terms" });
+    } else {
+      steps.push({ who: st.agent, kind: st.tool });
     }
   }
-  AGENTS.forEach(([n]) => {
-    if (steps.some(s => s.kind.includes(">" + n + "<"))) setAgent(n, "done");
-  });
   if (!steps.length) return "";
-  const nq = steps.filter(s => s.sql !== undefined).length;
-  const na = new Set(steps.filter(s => s.who !== "control_room").map(s => s.who)).size;
+  const nq = steps.filter(s => s.sql).length;
+  const na = new Set(steps.filter(s => s.agent).map(s => s.agent)).size;
   return `<details class="act"><summary>${steps.length} steps · ${na} specialist${na === 1 ? "" : "s"} consulted · ${nq} ClickHouse quer${nq === 1 ? "y" : "ies"}</summary>
     <div class="steps">${steps.map(s => `<div class="step">
       <div class="ag">${esc(s.who)}</div>
@@ -382,8 +377,18 @@ async function ask(text) {
     if (!r.ok) throw new Error("HTTP " + r.status + " — " + (await r.text()).slice(0, 200));
     const events = await r.json();
     const answer = finalText(events);
+
+    // /run returns only Control Room's own events, and AgentTool runs each
+    // specialist in an isolated context — so their ClickHouse queries never
+    // reach the session either. The server-side trace plugin captures them.
+    let steps = [];
+    try {
+      const tr = await fetch(`/api/trace/${sid}`);
+      if (tr.ok) steps = (await tr.json()).steps || [];
+    } catch { /* the answer still stands without its trace */ }
+
     turn.innerHTML = `<div class="you"><div class="who">OPS</div>${esc(text)}</div>
-      ${renderSteps(events)}
+      ${renderSteps(steps)}
       <div class="answer"><div class="who">CONTROL ROOM</div>
         <div class="md">${answer ? md(answer) : "<p>No answer returned.</p>"}</div></div>`;
   } catch (e) {
