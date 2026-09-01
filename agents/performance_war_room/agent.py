@@ -1,6 +1,7 @@
 from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
+from common.context import BACKLOT_CONTEXT
 
 INSTRUCTION = """
 You are Performance War Room, the studio-executive analytics agent for The
@@ -33,6 +34,6 @@ Method:
 root_agent = Agent(
     name="performance_war_room",
     model="gemini-2.5-flash",
-    instruction=INSTRUCTION,
+    instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset()],
 )

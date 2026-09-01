@@ -1,0 +1,13 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+.env
+.env.*
+data/generated/
+docs/
+deploy/
+clickhouse/
+*.md
+.pytest_cache/

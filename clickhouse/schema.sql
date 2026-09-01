@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS backlot.rights_contracts
     rate_value                     Float64,
     window_start                   Date,
     window_end                     Date,
-    escalation_threshold_streams    Nullable(UInt64),
+    escalation_threshold_units    Nullable(UInt64),
     escalation_rate_value           Nullable(Float64),
     source_clause                   String -- raw contract text snippet, kept for traceability in dispute briefs
 )

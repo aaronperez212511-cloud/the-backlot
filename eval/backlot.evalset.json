@@ -1,0 +1,246 @@
+{
+  "eval_set_id": "backlot_ground_truth",
+  "name": "The Backlot \u2014 ground-truth agent evaluation",
+  "description": "Scores Control Room against the anomalies deliberately seeded into the ClickHouse dataset. Rubrics are generated from data/generated/ANOMALIES.json, so they always describe the data that is actually loaded. Includes two negative cases \u2014 no false-positive royalty findings, and no invented incident \u2014 because an agent that always finds something is not a useful one.",
+  "eval_cases": [
+    {
+      "eval_id": "premiere_cross_domain_correlation",
+      "conversation": [
+        {
+          "invocation_id": "premiere_cross_domain_correlation-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "What happened during the Midnight Marquee premiere in Brazil? Check both playback health and ad revenue, and tell me whether they share a root cause."
+              }
+            ]
+          },
+          "creation_timestamp": 1788238819.6698399
+        }
+      ],
+      "rubrics": [
+        {
+          "rubric_id": "names_degraded_node",
+          "rubric_content": {
+            "text_property": "The response identifies the specific failing CDN edge node 'sa-east-1b' in territory BR as the location of the problem."
+          }
+        },
+        {
+          "rubric_id": "names_time_window",
+          "rubric_content": {
+            "text_property": "The response states the specific time window of the degradation (approximately 19:05-19:20 UTC), rather than describing the problem vaguely."
+          }
+        },
+        {
+          "rubric_id": "reports_playback_symptom",
+          "rubric_content": {
+            "text_property": "The response reports the playback symptom with concrete numbers: elevated buffering time, rebuffering, or viewer drop-off rate."
+          }
+        },
+        {
+          "rubric_id": "reports_ad_symptom",
+          "rubric_content": {
+            "text_property": "The response reports the advertising symptom: SSAI ad-stitching failures, quantified as lost revenue in dollars."
+          }
+        },
+        {
+          "rubric_id": "correlates_single_root_cause",
+          "rubric_content": {
+            "text_property": "The response explicitly concludes that the playback degradation and the ad-insertion failures are TWO SYMPTOMS OF ONE root cause on the same node in the same window \u2014 not two separate unrelated problems listed side by side."
+          }
+        },
+        {
+          "rubric_id": "consulted_multiple_specialists",
+          "rubric_content": {
+            "text_property": "The answer draws on both playback telemetry and advertising data, showing more than one specialist domain was consulted."
+          }
+        }
+      ],
+      "creation_timestamp": 1788238819.6698403
+    },
+    {
+      "eval_id": "royalty_forensic_audit",
+      "conversation": [
+        {
+          "invocation_id": "royalty_forensic_audit-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Audit the royalty payments across the catalog. Show me the arithmetic behind any discrepancy you find."
+              }
+            ]
+          },
+          "creation_timestamp": 1788238819.6698558
+        }
+      ],
+      "rubrics": [
+        {
+          "rubric_id": "finds_escalation_contract",
+          "rubric_content": {
+            "text_property": "The response identifies contract c003 (Kenji Watanabe) as underpaid."
+          }
+        },
+        {
+          "rubric_id": "explains_escalation_cause",
+          "rubric_content": {
+            "text_property": "The response explains the root cause of that underpayment as an escalation tier that was triggered but paid at the base rate \u2014 the escalation clause was effectively ignored."
+          }
+        },
+        {
+          "rubric_id": "finds_flat_contract",
+          "rubric_content": {
+            "text_property": "The response identifies contract c004 (Marcus Chen) as underpaid against a flat fee."
+          }
+        },
+        {
+          "rubric_id": "shows_arithmetic",
+          "rubric_content": {
+            "text_property": "The response shows its working: the unit count (streams, minutes or attributed revenue), the rate(s) applied, the expected total, the amount actually paid, and the resulting gap in dollars."
+          }
+        },
+        {
+          "rubric_id": "gap_magnitudes_correct",
+          "rubric_content": {
+            "text_property": "The reported gaps are approximately $462.84 for c003 and $7,797.96 for c004 (within about 5%)."
+          }
+        },
+        {
+          "rubric_id": "no_false_positives",
+          "rubric_content": {
+            "text_property": "The response does NOT claim that contracts other than these two are materially underpaid. Every other contract is correct to within ordinary rounding drift."
+          }
+        }
+      ],
+      "creation_timestamp": 1788238819.669856
+    },
+    {
+      "eval_id": "fraud_ring_discrimination",
+      "conversation": [
+        {
+          "invocation_id": "fraud_ring_discrimination-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Is anyone watching this premiere who shouldn't be? Rank anything suspicious and tell me why."
+              }
+            ]
+          },
+          "creation_timestamp": 1788238819.6698582
+        }
+      ],
+      "rubrics": [
+        {
+          "rubric_id": "identifies_ring_fingerprint",
+          "rubric_content": {
+            "text_property": "The response identifies device fingerprint 'fp-ring-77c1' as the top suspicious cluster."
+          }
+        },
+        {
+          "rubric_id": "quantifies_blast_radius",
+          "rubric_content": {
+            "text_property": "The response quantifies the ring: approximately 90 distinct accounts sharing one device."
+          }
+        },
+        {
+          "rubric_id": "cites_corroborating_signals",
+          "rubric_content": {
+            "text_property": "The response justifies the flag with at least two corroborating signals \u2014 e.g. account fan-out AND impossible travel AND/OR session concurrency \u2014 not fan-out alone."
+          }
+        },
+        {
+          "rubric_id": "does_not_flag_decoys",
+          "rubric_content": {
+            "text_property": "The response does NOT flag ordinary shared-device households or public/venue devices as fraud. Those have high account fan-out but no impossible travel and no concurrency spike, and are legitimate."
+          }
+        }
+      ],
+      "creation_timestamp": 1788238819.6698585
+    },
+    {
+      "eval_id": "churn_early_signal",
+      "conversation": [
+        {
+          "invocation_id": "churn_early_signal-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Is any title losing its audience? If so, when did it turn and why?"
+              }
+            ]
+          },
+          "creation_timestamp": 1788238819.669861
+        }
+      ],
+      "rubrics": [
+        {
+          "rubric_id": "identifies_churn_title",
+          "rubric_content": {
+            "text_property": "The response identifies 'Static Bloom' (t02) as the title at retention risk."
+          }
+        },
+        {
+          "rubric_id": "identifies_turn_date",
+          "rubric_content": {
+            "text_property": "The response names when the decline began, around 2026-08-29 (roughly day 14 after release)."
+          }
+        },
+        {
+          "rubric_id": "quantifies_decline",
+          "rubric_content": {
+            "text_property": "The response quantifies the decline in average watch time as a percentage or absolute change, rather than asserting it vaguely."
+          }
+        },
+        {
+          "rubric_id": "corroborates_with_sentiment",
+          "rubric_content": {
+            "text_property": "The response cross-checks sentiment data and notes that sentiment turned negative over the same period, strengthening the signal."
+          }
+        }
+      ],
+      "creation_timestamp": 1788238819.669861
+    },
+    {
+      "eval_id": "restraint_no_invented_incident",
+      "conversation": [
+        {
+          "invocation_id": "restraint_no_invented_incident-1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Was there any CDN or ad-delivery incident affecting Nova Horizon in Japan? Be precise."
+              }
+            ]
+          },
+          "creation_timestamp": 1788238819.6698635
+        }
+      ],
+      "rubrics": [
+        {
+          "rubric_id": "reports_no_incident",
+          "rubric_content": {
+            "text_property": "The response states that no significant incident was found for that title/territory, rather than manufacturing one to seem useful."
+          }
+        },
+        {
+          "rubric_id": "backs_it_with_data",
+          "rubric_content": {
+            "text_property": "The response supports that conclusion with actual queried figures (e.g. buffering and fill rates near baseline), not just an assertion."
+          }
+        },
+        {
+          "rubric_id": "no_fabrication",
+          "rubric_content": {
+            "text_property": "The response does not invent specific incidents, node names, time windows or dollar losses that it did not obtain from the data."
+          }
+        }
+      ],
+      "creation_timestamp": 1788238819.6698635
+    }
+  ],
+  "creation_timestamp": 1788238819.6698637
+}

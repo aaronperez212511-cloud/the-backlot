@@ -67,6 +67,10 @@ def main() -> None:
             df[col] = pd.to_datetime(df[col]).dt.date
         for col in DATETIME_COLUMNS.get(table, []):
             df[col] = pd.to_datetime(df[col])
+        # Reload is idempotent: the generator is re-run whenever the data model
+        # changes, and appending on top of the previous load would silently
+        # double every aggregate the agents compute.
+        client.command(f"TRUNCATE TABLE IF EXISTS backlot.{table}")
         client.insert_df(f"backlot.{table}", df)
         print(f"loaded {len(df):,} rows into backlot.{table}")
 

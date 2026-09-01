@@ -14,3 +14,7 @@ node_modules/
 credentials/
 *.key.json
 service-account*.json
+
+# ADK local session/artifact storage, created at runtime by `adk web` / server.py
+.adk/
+*/.adk/

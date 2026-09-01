@@ -1,6 +1,7 @@
 from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
+from common.context import BACKLOT_CONTEXT
 
 INSTRUCTION = """
 You are Stream Fraud Sentinel, the credential-abuse and bot-traffic detector
@@ -34,6 +35,6 @@ Method:
 root_agent = Agent(
     name="fraud_sentinel",
     model="gemini-2.5-flash",
-    instruction=INSTRUCTION,
+    instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset()],
 )

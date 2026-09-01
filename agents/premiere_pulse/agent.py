@@ -1,6 +1,7 @@
 from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
+from common.context import BACKLOT_CONTEXT
 
 INSTRUCTION = """
 You are Premiere Pulse, the live streaming-ops copilot for The Backlot. You
@@ -32,6 +33,6 @@ Method:
 root_agent = Agent(
     name="premiere_pulse",
     model="gemini-2.5-flash",
-    instruction=INSTRUCTION,
+    instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset()],
 )

@@ -19,9 +19,15 @@ Return strict JSON with exactly these keys:
 - rate_type: one of "per_stream", "per_minute", "revenue_share_pct", "flat_window"
 - rate_value: number
 - territory: ISO-2 country code
-- escalation_threshold_streams: number or null
+- escalation_threshold_units: number or null
+- escalation_threshold_unit_name: the unit the threshold is counted in, exactly
+  as the clause words it (e.g. "streams", "attributed minutes"), or null
 - escalation_rate_value: number or null
 - plain_english: one sentence restating the obligation for a non-lawyer
+
+The threshold's unit matters as much as its number: a clause that bills per
+attributed minute escalates after a count of MINUTES, not streams. Report the
+unit the clause actually names, never the one you would expect.
 
 Clause:
 {clause_text}
@@ -37,7 +43,7 @@ def parse_rights_clause(clause_text: str) -> dict:
             200000 streams."
 
     Returns:
-        dict: rate_type, rate_value, territory, escalation_threshold_streams,
+        dict: rate_type, rate_value, territory, escalation_threshold_units,
         escalation_rate_value, and plain_english — ready to compare against
         what was actually paid.
     """

@@ -1,6 +1,7 @@
 from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
+from common.context import BACKLOT_CONTEXT
 
 INSTRUCTION = """
 You are Churn Early-Warning, the audience-retention risk agent for The
@@ -36,6 +37,6 @@ Method:
 root_agent = Agent(
     name="churn_early_warning",
     model="gemini-2.5-flash",
-    instruction=INSTRUCTION,
+    instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset()],
 )

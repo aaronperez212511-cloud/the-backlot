@@ -1,0 +1,18 @@
+{
+  "criteria": {
+    "rubric_based_final_response_quality_v1": {
+      "threshold": 0.75,
+      "judgeModelOptions": {
+        "judge_model": "gemini-2.5-pro",
+        "num_samples": 3
+      }
+    },
+    "hallucinations_v1": {
+      "threshold": 0.8,
+      "judgeModelOptions": {
+        "judge_model": "gemini-2.5-pro",
+        "num_samples": 1
+      }
+    }
+  }
+}
