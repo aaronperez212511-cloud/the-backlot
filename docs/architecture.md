@@ -72,7 +72,7 @@ Three cases score positive findings (correlation, royalty audit, fraud ranking).
 
 - `/` — the **Control Room console** (`web/index.html`): the six specialists as live status indicators, preset investigation scenarios, and for every answer an expandable trace of which specialists were consulted and the exact SQL each one ran against ClickHouse. The correlation claim is the product's whole thesis, so it has to be visible, not just asserted in a README.
 - `/adk` — the complete ADK API, including its developer UI at `/adk/dev-ui/` for raw event traces.
-- `/healthz` — liveness for Cloud Run.
+- `/api/health` — liveness. NOT `/healthz`: Google Front End intercepts that exact path on Cloud Run and returns its own 404 before the request reaches the app.
 
 ## Deployment
 

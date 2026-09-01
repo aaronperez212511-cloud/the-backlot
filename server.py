@@ -38,7 +38,7 @@ app = FastAPI(title="The Backlot — Control Room")
 app.mount("/adk", adk_app)
 
 
-@app.get("/healthz")
+@app.get("/api/health")
 def healthz() -> dict:
     return {"status": "ok", "agent": "control_room"}
 

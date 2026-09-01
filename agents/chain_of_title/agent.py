@@ -2,6 +2,7 @@ from google.adk import Agent
 
 from common.clickhouse_toolset import clickhouse_toolset
 from common.context import BACKLOT_CONTEXT
+from common.models import PRO, gemini
 from common.trace_plugin import fleet_trace
 
 from .contract_intelligence import parse_rights_clause
@@ -78,7 +79,7 @@ A rights holder's lawyer has to be able to follow your reasoning line by line.
 
 root_agent = Agent(
     name="chain_of_title",
-    model="gemini-2.5-pro",
+    model=gemini(PRO),
     instruction=INSTRUCTION + BACKLOT_CONTEXT,
     tools=[clickhouse_toolset(), parse_rights_clause],
     before_tool_callback=fleet_trace,

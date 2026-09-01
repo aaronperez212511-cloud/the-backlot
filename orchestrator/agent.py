@@ -1,6 +1,7 @@
 from google.adk import Agent
 from google.adk.tools.agent_tool import AgentTool
 
+from common.models import PRO, gemini
 from common.trace_plugin import fleet_trace
 
 from agents.chain_of_title.agent import root_agent as chain_of_title_agent
@@ -64,7 +65,7 @@ Rules:
 
 root_agent = Agent(
     name="control_room",
-    model="gemini-2.5-pro",
+    model=gemini(PRO),
     instruction=INSTRUCTION,
     # AgentTool, not sub_agents. `sub_agents` in ADK means control TRANSFER:
     # Control Room would hand the conversation to one specialist and never get

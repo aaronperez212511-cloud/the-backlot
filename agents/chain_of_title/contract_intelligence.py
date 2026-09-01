@@ -12,6 +12,8 @@ import os
 from google import genai
 from google.genai import types
 
+from common.models import RETRY_OPTIONS
+
 _MODEL = "gemini-2.5-pro"
 
 _PROMPT = """Extract structured royalty terms from this rights-contract clause.
@@ -51,6 +53,10 @@ def parse_rights_clause(clause_text: str) -> dict:
         vertexai=True,
         project=os.environ["GOOGLE_CLOUD_PROJECT"],
         location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1"),
+        # This call is made from inside a tool, mid-audit. A transient 429 from
+        # Vertex's shared quota here would abort the whole reconciliation, so
+        # it retries on the same terms as the agents' own model calls.
+        http_options=types.HttpOptions(retry_options=RETRY_OPTIONS),
     )
     response = client.models.generate_content(
         model=_MODEL,
