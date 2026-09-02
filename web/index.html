@@ -106,7 +106,7 @@
     border: 1px solid transparent; border-radius: 3px; margin-bottom: 3px;
     transition: background .35s ease, border-color .35s ease;
   }
-  .agent .mk { width: 30px; height: 30px; flex-shrink: 0; }
+  .agent .mk { width: 38px; height: 38px; flex-shrink: 0; }
   .agent.active { background: var(--ink-3); border-color: #2f2a22; }
   .agent.done   { background: var(--ink-3); border-color: var(--line); }
   .agent .nm {
@@ -121,11 +121,20 @@
   .agent .mk .b { fill: #2a2a33; transition: fill .35s ease; }
   .agent .mk .b.on { fill: var(--brass-lo); }
   .agent.active .mk .b.on, .agent.done .mk .b.on { fill: var(--brass); }
+  /* Sitting on the blade rather than in the opening, the letter needs to read
+     against the blade underneath it: mid-grey while the blade is dim, and cut
+     out in ink once the blade lights brass.
+
+     Bold sans, not the Pinyon script used for the large letter assets. A blade
+     is a narrow wedge, and at the size one occupies here Pinyon's hairlines
+     vanish entirely — sized up far enough to register, the glyph no longer
+     fits inside the blade. The script survives in the exported PNGs, where
+     there is room for it. */
   .agent .mk .ltr {
-    font: 400 44px var(--initial); fill: var(--dim);
+    font: 700 20px var(--sans); fill: #6d6d7a;
     transition: fill .35s ease;
   }
-  .agent.active .mk .ltr, .agent.done .mk .ltr { fill: var(--brass); }
+  .agent.active .mk .ltr, .agent.done .mk .ltr { fill: var(--ink); }
 
   .stack { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 22px; }
   .stack dl { margin: 0; display: grid; grid-template-columns: 88px 1fr; gap: 9px 12px; }
@@ -509,18 +518,24 @@ let sid = null, busy = false, traceOffset = 0;
 
 const esc = s => (s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
-/* An agent's mark is the shared aperture with only its own blade lit, plus its
-   initial in the opening — so the six marks are visibly one family, and the
-   agent is identifiable two ways: the position of the brass blade, and the
-   letter. The letter sits in the opening rather than on the blade itself
-   because at the 30px this renders at, one blade is a ~7px sliver and a letter
-   set on it is not legible. Control Room's own mark carries no letter: all six
-   blades lit, which is precisely what it is. */
+/* An agent's mark is the shared aperture with only its own blade lit, and its
+   initial sits inside that blade — so which agent you are looking at is said
+   twice, by the position of the brass blade and by the letter on it.
+
+   The letter is placed at the blade's centroid, held upright rather than
+   rotated with the blade: a rotated letter is unreadable on the three blades
+   that end up upside down. */
+const BLADE_R = 28.16, BLADE_A = -43.3;   // polar centroid of blade 0
+function bladeCentre(k) {
+  const a = (BLADE_A + 60 * k) * Math.PI / 180;
+  return [(50 + BLADE_R * Math.cos(a)).toFixed(2), (50 + BLADE_R * Math.sin(a)).toFixed(2)];
+}
 function markFor(i, cls) {
   const blades = [0, 1, 2, 3, 4, 5].map(k =>
     `<use href="#blade" class="b${k === i ? " on" : ""}" transform="rotate(${k * 60} 50 50)"/>`).join("");
+  const [x, y] = bladeCentre(i);
   return `<svg class="${cls}" viewBox="0 0 100 100" role="img" aria-label="${AGENTS[i][0]}">
-    ${blades}<text class="ltr" x="50" y="51" text-anchor="middle"
+    ${blades}<text class="ltr" x="${x}" y="${y}" text-anchor="middle"
       dominant-baseline="central">${LETTERS[i]}</text></svg>`;
 }
 
