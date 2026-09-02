@@ -65,9 +65,16 @@
     font: 700 30px/1 var(--script); letter-spacing: .03em;
     text-transform: uppercase; color: var(--ivory);
   }
+  /* "Control Room" plays behind a small proscenium: a valance with a
+     scalloped hem and tassels, and a drape tied back down each side. Drawn as
+     SVG stretched to the element rather than shipped as an image, so it stays
+     crisp at any size and the words inside remain real, selectable text. */
+  .brand .stage { position: relative; display: inline-block; padding: 9px 24px 4px; margin-top: 2px; }
+  .brand .stage > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .brand .s {
+    position: relative;
     font: 400 10px/1 var(--sans); letter-spacing: .34em;
-    text-transform: uppercase; color: var(--brass); margin-top: 6px;
+    text-transform: uppercase; color: var(--brass); white-space: nowrap;
   }
   .rule { width: 1px; height: 30px; background: var(--line); }
   .tag {
@@ -282,7 +289,37 @@
     </svg>
     <div class="words">
       <div class="t">The Backlot</div>
-      <div class="s">Control Room</div>
+      <div class="stage">
+        <svg viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="cv" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#a8202e"/><stop offset="1" stop-color="#5c0d16"/>
+            </linearGradient>
+            <linearGradient id="cf" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#a8202e"/><stop offset=".45" stop-color="#5c0d16"/>
+              <stop offset=".6" stop-color="#a8202e"/><stop offset="1" stop-color="#5c0d16"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 0 L34 0 C34 14 26 22 20 34 C16 44 15 52 15 60 L0 60 Z" fill="url(#cf)"/>
+          <path d="M200 0 L166 0 C166 14 174 22 180 34 C184 44 185 52 185 60 L200 60 Z" fill="url(#cf)"/>
+          <path d="M0 0 L200 0 L200 10
+                   C186 10 182 20 168 20 C154 20 150 10 136 10
+                   C122 10 118 20 104 20 C90 20 86 10 72 10
+                   C58 10 54 20 40 20 C26 20 22 10 8 10 L0 10 Z" fill="url(#cv)"/>
+          <path d="M0 10 C14 10 18 20 32 20 C46 20 50 10 64 10
+                   C78 10 82 20 96 20 C110 20 114 10 128 10
+                   C142 10 146 20 160 20 C174 20 178 10 192 10 L200 10"
+                fill="none" stroke="#c9a961" stroke-width="1.1"/>
+          <g fill="#c9a961">
+            <circle cx="32" cy="21" r="1.6"/><path d="M30.4 21.8 L33.6 21.8 L32.8 27 L31.2 27 Z"/>
+            <circle cx="96" cy="21" r="1.6"/><path d="M94.4 21.8 L97.6 21.8 L96.8 27 L95.2 27 Z"/>
+            <circle cx="160" cy="21" r="1.6"/><path d="M158.4 21.8 L161.6 21.8 L160.8 27 L159.2 27 Z"/>
+          </g>
+          <path d="M12 34 C18 31 24 31 27 34" fill="none" stroke="#c9a961" stroke-width="1.2"/>
+          <path d="M188 34 C182 31 176 31 173 34" fill="none" stroke="#c9a961" stroke-width="1.2"/>
+        </svg>
+        <div class="s">Control Room</div>
+      </div>
     </div>
   </div>
   <div class="rule"></div>
