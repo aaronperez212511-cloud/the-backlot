@@ -38,9 +38,9 @@ GOLD = [
 # Ultra-bright chrome: whiter peaks and a shallower dark band than the gold, so
 # it reads as the more polished of the two metals.
 CHROME = [
-    (0.00, (255, 255, 255)), (0.11, (255, 255, 255)), (0.28, (240, 246, 251)),
-    (0.43, (185, 200, 214)), (0.50, (143, 160, 176)), (0.55, (255, 255, 255)),
-    (0.72, (255, 255, 255)), (0.87, (232, 241, 248)), (1.00, (255, 255, 255)),
+    (0.00, (255, 255, 255)), (0.20, (255, 255, 255)), (0.36, (220, 231, 241)),
+    (0.46, (127, 143, 161)), (0.50, ( 66,  80,  95)), (0.54, (255, 255, 255)),
+    (0.76, (255, 255, 255)), (0.88, (207, 220, 232)), (1.00, (255, 255, 255)),
 ]
 
 HAIR = (44, 42, 38)         # hairline ink, just above the threshold of sight
@@ -125,17 +125,28 @@ def aperture_mask(size: int, only: int | None = None) -> Image.Image:
     return m
 
 
-def letter_mask(ch: str, target: int, fnt_path: Path) -> Image.Image:
-    """A glyph rendered and scaled so its ink fits a `target` box — Pinyon's
-    capitals vary enormously in width, so fitting by font-size alone leaves the
-    six letters visibly mismatched."""
+WIDEN = 1.34
+
+
+def letter_mask(ch: str, target: int, fnt_path: Path, turn: float = 0.0) -> Image.Image:
+    """A glyph fitted to a `target` box and turned onto its blade.
+
+    Pinyon's capitals vary enormously in width, so fitting by font-size alone
+    leaves the six visibly mismatched. The fit is then stretched horizontally —
+    copperplate capitals are tall and narrow, and at a height that fits a wedge
+    they look thin. `turn` rotates the glyph with its blade so the six read as
+    one turn of a single ring rather than six upright letters.
+    """
     f = ImageFont.truetype(str(fnt_path), target * 3)
     tmp = Image.new("L", (target * 9, target * 9), 0)
     ImageDraw.Draw(tmp).text((target * 4, target * 4), ch, font=f, fill=255, anchor="mm")
-    bb = tmp.getbbox()
-    g = tmp.crop(bb)
+    g = tmp.crop(tmp.getbbox())
     k = min(target / g.width, target / g.height)
-    return g.resize((max(int(g.width * k), 1), max(int(g.height * k), 1)), Image.LANCZOS)
+    g = g.resize((max(int(g.width * k * WIDEN), 1), max(int(g.height * k), 1)), Image.LANCZOS)
+    if turn:
+        # expand=True so the corners of a turned glyph are not clipped
+        g = g.rotate(-turn, resample=Image.BICUBIC, expand=True)
+    return g
 
 
 def tracked(draw: ImageDraw.ImageDraw, xy, text: str, fnt, fill, track: int, anchor="ls"):
@@ -271,7 +282,7 @@ def main() -> None:
     # six initials, ultra-bright chrome, seated on their own blades
     for k, (ch_, _) in enumerate(AGENTS):
         gx, gy = blade_centre(k)
-        lm = letter_mask(ch_, int(hero * 0.145), PINYON)
+        lm = letter_mask(ch_, int(hero * 0.145), PINYON, turn=k * 60)
         full = Image.new("L", (cw, ch), 0)
         full.paste(lm, (int(hx + gx / 100 * hero - lm.width / 2),
                         int(hy + gy / 100 * hero - lm.height / 2)))
@@ -315,7 +326,7 @@ def main() -> None:
         plate_metal(cv, lit, GOLD)
 
         gx, gy = blade_centre(k)
-        lm = letter_mask(ch_, int(sm * 0.155), PINYON)
+        lm = letter_mask(ch_, int(sm * 0.155), PINYON, turn=k * 60)
         full = Image.new("L", (cw, ch), 0)
         full.paste(lm, (int(sx + gx / 100 * sm - lm.width / 2),
                         int(sy + gy / 100 * sm - lm.height / 2)))
