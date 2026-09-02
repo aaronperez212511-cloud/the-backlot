@@ -32,6 +32,31 @@ WHITE = (255, 255, 255)
 BLACK = (10, 10, 12)
 SS = 4  # supersample factor; the blades have long diagonals that alias badly
 
+# Polished chrome, as vertical stops. The abrupt light/dark flip just past the
+# middle is the part that reads as metal — a ramp that only lightens looks like
+# grey paint no matter how bright the ends are.
+CHROME = [
+    (0.00, (255, 255, 255)), (0.16, (246, 250, 253)), (0.34, (195, 207, 219)),
+    (0.47, (126, 139, 154)), (0.53, (92, 104, 117)),  (0.58, (232, 240, 247)),
+    (0.76, (255, 255, 255)), (0.90, (212, 222, 231)), (1.00, (170, 182, 195)),
+]
+
+
+def ramp(h: int) -> Image.Image:
+    """A 1px-wide vertical chrome strip, stretched to height h."""
+    strip = Image.new("RGB", (1, h))
+    px = strip.load()
+    for y in range(h):
+        t = y / max(h - 1, 1)
+        for i in range(len(CHROME) - 1):
+            t0, c0 = CHROME[i]
+            t1, c1 = CHROME[i + 1]
+            if t0 <= t <= t1:
+                f = (t - t0) / (t1 - t0) if t1 > t0 else 0
+                px[0, y] = tuple(round(a + (b - a) * f) for a, b in zip(c0, c1))
+                break
+    return strip
+
 
 def rotate(p: tuple[float, float], deg: float) -> tuple[float, float]:
     a = math.radians(deg)
@@ -40,13 +65,25 @@ def rotate(p: tuple[float, float], deg: float) -> tuple[float, float]:
             50 + x * math.sin(a) + y * math.cos(a))
 
 
-def mark_png(size: int, colour: tuple[int, int, int], path: Path) -> None:
+def mark_png(size: int, colour, path: Path) -> None:
+    """colour is an RGB triple, or the string "chrome" for the gradient fill."""
     big = size * SS
-    im = Image.new("RGBA", (big, big), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    for k in range(6):
-        poly = [rotate(p, k * 60) for p in BLADE]
-        d.polygon([(x / 100 * big, y / 100 * big) for x, y in poly], fill=colour + (255,))
+    if colour == "chrome":
+        # Build the shape as a mask, then show the gradient through it, so one
+        # ramp spans the whole aperture instead of each blade carrying its own.
+        mask = Image.new("L", (big, big), 0)
+        d = ImageDraw.Draw(mask)
+        for k in range(6):
+            poly = [rotate(p, k * 60) for p in BLADE]
+            d.polygon([(x / 100 * big, y / 100 * big) for x, y in poly], fill=255)
+        im = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+        im.paste(ramp(big).resize((big, big)), (0, 0), mask)
+    else:
+        im = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        for k in range(6):
+            poly = [rotate(p, k * 60) for p in BLADE]
+            d.polygon([(x / 100 * big, y / 100 * big) for x, y in poly], fill=colour + (255,))
     im.resize((size, size), Image.LANCZOS).save(path)
 
 
@@ -74,7 +111,7 @@ def find_caveat() -> Path | None:
     return None
 
 
-def lockup(size: int, colour: tuple[int, int, int], font_path: Path, path: Path) -> None:
+def lockup(size: int, colour, font_path: Path, path: Path) -> None:
     """Mark left, wordmark right, on one transparent canvas."""
     mark = size
     fs = int(size * 0.78)
@@ -103,15 +140,21 @@ def lockup(size: int, colour: tuple[int, int, int], font_path: Path, path: Path)
     tmp.unlink()
 
     d = ImageDraw.Draw(im)
-    d.text((pad + mark + gap - tb[0], (H - th) // 2 - tb[1]), text, font=font,
-           fill=colour + (255,))
+    if colour == "chrome":
+        wm = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(wm).text((pad + mark + gap - tb[0], (H - th) // 2 - tb[1]),
+                                text, font=font, fill=255)
+        im.paste(ramp(H).resize((W, H)), (0, 0), wm)
+    else:
+        d.text((pad + mark + gap - tb[0], (H - th) // 2 - tb[1]), text, font=font,
+               fill=colour + (255,))
     im.save(path)
 
 
 def main() -> None:
     mark_svg(OUT / "backlot-mark.svg")
     print(f"  {'backlot-mark.svg':<34} vector")
-    for name, colour in (("brass", BRASS), ("white", WHITE), ("black", BLACK)):
+    for name, colour in (("brass", BRASS), ("chrome", "chrome"), ("white", WHITE), ("black", BLACK)):
         p = OUT / f"backlot-mark-{name}.png"
         mark_png(1024, colour, p)
         print(f"  {p.name:<34} 1024x1024")
@@ -121,7 +164,7 @@ def main() -> None:
         print("  Caveat not found locally — skipping lockups "
               "(drop Caveat-Bold.ttf in web/marks/ and re-run)")
         return
-    for name, colour in (("brass", BRASS), ("white", WHITE), ("black", BLACK)):
+    for name, colour in (("brass", BRASS), ("chrome", "chrome"), ("white", WHITE), ("black", BLACK)):
         p = OUT / f"backlot-lockup-{name}.png"
         lockup(256, colour, f, p)
         im = Image.open(p)

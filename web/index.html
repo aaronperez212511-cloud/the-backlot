@@ -253,7 +253,8 @@
 
   .working { display: flex; align-items: center; gap: 12px; color: var(--muted); font: 400 11.5px/1 var(--mono); }
   .working .mark { width: 19px; height: 19px; animation: spin 5.5s linear infinite; }
-  .working .mark .b { fill: var(--brass-lo); }
+  .working .mark { color: var(--brass-lo); }
+  .working .mark use { fill: var(--brass-lo); }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ── Composer ───────────────────────────────────────────────────────── */
@@ -441,22 +442,35 @@
     <!-- Chrome: the dark band across the middle is what sells it. A silver
          ramp that only lightens reads as grey paint; polished metal needs the
          horizon line where the reflection flips. -->
+    <linearGradient id="chromeMark" gradientUnits="userSpaceOnUse" x1="50" y1="4" x2="50" y2="96">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="16%"  stop-color="#f6fafd"/>
+      <stop offset="34%"  stop-color="#c3cfdb"/>
+      <stop offset="47%"  stop-color="#7e8b9a"/>
+      <stop offset="53%"  stop-color="#5c6875"/>
+      <stop offset="58%"  stop-color="#e8f0f7"/>
+      <stop offset="76%"  stop-color="#ffffff"/>
+      <stop offset="90%"  stop-color="#d4dee7"/>
+      <stop offset="100%" stop-color="#aab6c3"/>
+    </linearGradient>
     <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"   stop-color="#ffffff"/>
-      <stop offset="18%"  stop-color="#f2f6fa"/>
-      <stop offset="40%"  stop-color="#b9c4d0"/>
-      <stop offset="51%"  stop-color="#7d8996"/>
-      <stop offset="62%"  stop-color="#dbe3ea"/>
-      <stop offset="85%"  stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#c3ccd6"/>
+      <stop offset="14%"  stop-color="#ffffff"/>
+      <stop offset="30%"  stop-color="#dfe9f2"/>
+      <stop offset="45%"  stop-color="#9aa8b7"/>
+      <stop offset="52%"  stop-color="#6b7887"/>
+      <stop offset="56%"  stop-color="#ffffff"/>
+      <stop offset="74%"  stop-color="#eef4fa"/>
+      <stop offset="90%"  stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#b6c2cf"/>
     </linearGradient>
-    <g id="aperture">
-      <use href="#blade" class="b" fill="#c9a961" transform="rotate(0 50 50)"/>
-      <use href="#blade" class="b" fill="#c9a961" transform="rotate(60 50 50)"/>
-      <use href="#blade" class="b" fill="#c9a961" transform="rotate(120 50 50)"/>
-      <use href="#blade" class="b" fill="#c9a961" transform="rotate(180 50 50)"/>
-      <use href="#blade" class="b" fill="#c9a961" transform="rotate(240 50 50)"/>
-      <use href="#blade" class="b" fill="#c9a961" transform="rotate(300 50 50)"/>
+    <g id="aperture" fill="url(#chromeMark)">
+      <use href="#blade" transform="rotate(0 50 50)"/>
+      <use href="#blade" transform="rotate(60 50 50)"/>
+      <use href="#blade" transform="rotate(120 50 50)"/>
+      <use href="#blade" transform="rotate(180 50 50)"/>
+      <use href="#blade" transform="rotate(240 50 50)"/>
+      <use href="#blade" transform="rotate(300 50 50)"/>
     </g>
   </defs>
 </svg>
