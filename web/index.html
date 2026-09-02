@@ -61,9 +61,14 @@
   .brand { display: flex; align-items: center; gap: 14px; }
   .brand .mark { width: 30px; height: 30px; flex-shrink: 0; }
   .brand .words { line-height: 1.1; }
+  /* Gold chrome on HTML text: a gradient painted behind the glyphs and clipped
+     to them. background-clip is what makes a metal ramp possible here at all —
+     an SVG <linearGradient> cannot fill HTML text. */
   .brand .t {
-    font: 700 30px/1 var(--script); letter-spacing: .03em;
-    text-transform: uppercase; color: var(--ivory);
+    font: 700 30px/1 var(--script); letter-spacing: .03em; text-transform: uppercase;
+    background: linear-gradient(180deg, #fffae7 0%, #ffeeba 13%, #e8c874 29%,
+      #a8813a 43%, #5c421a 50%, #f5dc9a 56%, #ffeec0 71%, #fffbf0 88%, #cfae66 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   /* "Control Room" plays behind a small proscenium: a valance with a
      scalloped hem and tassels, and a drape tied back down each side. Drawn as
@@ -73,8 +78,11 @@
   .brand .stage > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .brand .s {
     position: relative;
-    font: 400 10px/1 var(--sans); letter-spacing: .34em;
-    text-transform: uppercase; color: var(--brass); white-space: nowrap;
+    font: 500 10px/1 var(--sans); letter-spacing: .34em;
+    text-transform: uppercase; white-space: nowrap;
+    background: linear-gradient(180deg, #fffae7 0%, #ffeeba 16%, #e8c874 34%,
+      #a8813a 46%, #6b4e1c 52%, #f5dc9a 58%, #ffeec0 74%, #fffbf0 90%, #cfae66 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .rule { width: 1px; height: 30px; background: var(--line); }
   .tag {
@@ -118,9 +126,9 @@
 
   /* Blades dim by default, brass when that specialist is working. The
      initial in the opening follows the same two states. */
-  .agent .mk .b { fill: #2a2a33; transition: fill .35s ease; }
-  .agent .mk .b.on { fill: var(--brass-lo); }
-  .agent.active .mk .b.on, .agent.done .mk .b.on { fill: var(--brass); }
+  .agent .mk .b { fill: #24242c; transition: fill .35s ease, opacity .35s ease; }
+  .agent .mk .b.on { fill: url(#goldMark); opacity: .55; }
+  .agent.active .mk .b.on, .agent.done .mk .b.on { opacity: 1; }
   /* Sitting on the blade rather than in the opening, the letter needs to read
      against the blade underneath it: mid-grey while the blade is dim, and cut
      out in ink once the blade lights brass.
@@ -442,29 +450,43 @@
     <!-- Chrome: the dark band across the middle is what sells it. A silver
          ramp that only lightens reads as grey paint; polished metal needs the
          horizon line where the reflection flips. -->
-    <linearGradient id="chromeMark" gradientUnits="userSpaceOnUse" x1="50" y1="4" x2="50" y2="96">
-      <stop offset="0%"   stop-color="#ffffff"/>
-      <stop offset="16%"  stop-color="#f6fafd"/>
-      <stop offset="34%"  stop-color="#c3cfdb"/>
-      <stop offset="47%"  stop-color="#7e8b9a"/>
-      <stop offset="53%"  stop-color="#5c6875"/>
-      <stop offset="58%"  stop-color="#e8f0f7"/>
-      <stop offset="76%"  stop-color="#ffffff"/>
-      <stop offset="90%"  stop-color="#d4dee7"/>
-      <stop offset="100%" stop-color="#aab6c3"/>
+    <!-- Gold chrome. The dark stop is driven to a brown-black rather than a
+         mid ochre — that is what separates gilded metal from flat yellow. -->
+    <linearGradient id="goldMark" gradientUnits="userSpaceOnUse" x1="50" y1="4" x2="50" y2="96">
+      <stop offset="0%"   stop-color="#fffae7"/>
+      <stop offset="13%"  stop-color="#ffeeba"/>
+      <stop offset="29%"  stop-color="#e8c874"/>
+      <stop offset="43%"  stop-color="#a8813a"/>
+      <stop offset="50%"  stop-color="#543c14"/>
+      <stop offset="56%"  stop-color="#f5dc9a"/>
+      <stop offset="71%"  stop-color="#ffeec0"/>
+      <stop offset="87%"  stop-color="#fffbf0"/>
+      <stop offset="100%" stop-color="#c9a961"/>
+    </linearGradient>
+    <!-- The same gold as a bounding-box ramp, for text runs. -->
+    <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fffae7"/>
+      <stop offset="13%"  stop-color="#ffeeba"/>
+      <stop offset="29%"  stop-color="#e8c874"/>
+      <stop offset="43%"  stop-color="#a8813a"/>
+      <stop offset="50%"  stop-color="#5c421a"/>
+      <stop offset="56%"  stop-color="#f5dc9a"/>
+      <stop offset="71%"  stop-color="#ffeec0"/>
+      <stop offset="88%"  stop-color="#fffbf0"/>
+      <stop offset="100%" stop-color="#cfae66"/>
     </linearGradient>
     <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"   stop-color="#ffffff"/>
-      <stop offset="14%"  stop-color="#ffffff"/>
-      <stop offset="30%"  stop-color="#dfe9f2"/>
-      <stop offset="45%"  stop-color="#9aa8b7"/>
-      <stop offset="52%"  stop-color="#6b7887"/>
-      <stop offset="56%"  stop-color="#ffffff"/>
-      <stop offset="74%"  stop-color="#eef4fa"/>
-      <stop offset="90%"  stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#b6c2cf"/>
+      <stop offset="11%"  stop-color="#ffffff"/>
+      <stop offset="28%"  stop-color="#f0f6fb"/>
+      <stop offset="43%"  stop-color="#b9c8d6"/>
+      <stop offset="50%"  stop-color="#8fa0b0"/>
+      <stop offset="55%"  stop-color="#ffffff"/>
+      <stop offset="72%"  stop-color="#ffffff"/>
+      <stop offset="87%"  stop-color="#e8f1f8"/>
+      <stop offset="100%" stop-color="#ffffff"/>
     </linearGradient>
-    <g id="aperture" fill="url(#chromeMark)">
+    <g id="aperture" fill="url(#goldMark)">
       <use href="#blade" transform="rotate(0 50 50)"/>
       <use href="#blade" transform="rotate(60 50 50)"/>
       <use href="#blade" transform="rotate(120 50 50)"/>

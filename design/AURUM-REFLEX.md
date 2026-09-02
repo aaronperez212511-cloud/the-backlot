@@ -1,0 +1,19 @@
+# Aurum Reflex
+
+**A design philosophy of gilded metal, measured light, and patient repetition.**
+
+---
+
+## The philosophy
+
+Aurum Reflex holds that the most sophisticated surface is not the one that glows, but the one that **remembers a light it was never given**. Polished metal does not emit; it reports. It takes a single source and returns it as a structured event — a bright shoulder, a sudden dark horizon, a second brightness beneath. That horizon line, the abrupt inversion where reflection flips, is the movement's central article of faith. A gradient that only lightens is paint. A gradient that *turns* is metal. Everything in this philosophy is built on that one hard boundary, and the work must earn it through meticulous calibration — a hundred rejected ramps before the one that reads as gold rather than as yellow.
+
+**Space and form.** The movement works in deep ink grounds and reserves metal for the few forms that deserve it. Negative space is not emptiness but atmosphere: the black around a gilded object is what convinces the eye the object has depth. Forms are geometric, rotationally derived, and constructed rather than drawn — a single unit repeated through exact angular intervals, so that symmetry is a property of the system and not of the hand. Nothing is placed approximately. Every vertex is computed, every interval identical, and the resulting order should feel inevitable, the product of deep expertise rather than arrangement.
+
+**Color and material.** Two metals and nothing else. A warm gold chrome carries the primary voice — its ramp weighted toward amber in the highlights and driven to a genuine brown-black at the horizon, never a flat ochre. Against it, a cold ultra-bright chrome answers: whiter at the peaks, shallower at its dark band, so it reads as the more polished of the two. The tension between warm and cold metal *is* the palette. Colour beyond these is forbidden; any third hue dilutes the illusion that these surfaces are reflecting a shared environment. Hairlines are drawn in the faintest possible ink-grey, near the threshold of visibility, so the structure whispers.
+
+**Scale and rhythm.** One dominant form, then many small ones. The movement borrows the grammar of the scientific plate: a specimen presented at full scale, then a systematic series beneath it showing the same specimen through successive states. Repetition is the engine of meaning here — twelve identical marks, six phases of one rotation, a ring of ticks at exact degrees. This dense accumulation rewards sustained viewing and betrays the countless hours behind it. The eye should find a new alignment on the fifth look that it missed on the first.
+
+**Composition and hierarchy.** Information descends by weight of material, not by size of type. The gilded form outranks everything; the bright chrome accents come second; typography is last and knows it. Text appears only as clinical annotation — small, wide-tracked, monospaced or set in a high-contrast face whose thin strokes behave like engraved rules. Reference numerals, plate designations, and terse specimen labels do the work of paragraphs. No sentence explains what the composition already states. Margins are generous and absolute: nothing crowds an edge, nothing overlaps, and every element breathes with the discipline of a master craftsman who knows restraint is the hardest technique.
+
+**The standard.** Aurum Reflex is unforgiving of approximation. A gradient stop off by two percent, a tick mark off by half a degree, a letter fitted by eye instead of by measurement — each is visible to anyone who looks closely, and this work is made to be looked at closely. The finished piece must carry the unmistakable evidence of painstaking attention: geometry that survives magnification, metal that survives scrutiny, and a composition so carefully balanced that it appears effortless. Master-level execution is not an aspiration of this movement. It is the price of entry.
