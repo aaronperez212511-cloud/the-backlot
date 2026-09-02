@@ -6,8 +6,16 @@
 <title>The Backlot — Control Room</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Pinyon Script, self-hosted from web/marks/ — SIL Open Font License 1.1,
+     so it ships with the repository. Used only for the letters in the
+     specialist marks, which are logo elements rather than interface text. */
+  @font-face {
+    font-family: "Pinyon Script";
+    src: url("/marks/PinyonScript-Regular.ttf") format("truetype");
+    font-weight: 400; font-display: swap;
+  }
   :root {
     /* Ink, ivory and brass. A near-monochrome palette with one metal in it
        reads as formal; every additional hue costs some of that. The only
@@ -26,9 +34,14 @@
     --slate:     #97a3ad;
     --red:       #c96a5c;
     --green:     #7d9a72;
-    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-    --sans:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --mono:  "JetBrains Mono", ui-monospace, Consolas, monospace;
+    /* One web font, used for the wordmark and nothing else. Everything else
+       runs on the system UI stack: it renders instantly, needs no network, and
+       keeps the dense operational text plain, which is what makes the single
+       scripted title read as a mark rather than as decoration. */
+    --script: "Caveat", "Segoe Script", cursive;
+    --initial: "Pinyon Script", "Segoe Script", cursive;
+    --sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono:  ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -49,7 +62,7 @@
   .brand .mark { width: 30px; height: 30px; flex-shrink: 0; }
   .brand .words { line-height: 1.1; }
   .brand .t {
-    font: 500 20px/1 var(--serif); letter-spacing: .22em;
+    font: 700 30px/1 var(--script); letter-spacing: .03em;
     text-transform: uppercase; color: var(--ivory);
   }
   .brand .s {
@@ -102,7 +115,7 @@
   .agent .mk .b.on { fill: var(--brass-lo); }
   .agent.active .mk .b.on, .agent.done .mk .b.on { fill: var(--brass); }
   .agent .mk .ltr {
-    font: 600 30px var(--serif); fill: var(--dim);
+    font: 400 44px var(--initial); fill: var(--dim);
     transition: fill .35s ease;
   }
   .agent.active .mk .ltr, .agent.done .mk .ltr { fill: var(--brass); }
@@ -121,7 +134,7 @@
 
   .empty { max-width: 680px; margin: 26px auto 0; }
   .empty h1 {
-    font: 300 44px/1.18 var(--serif); margin: 0 0 20px;
+    font: 300 38px/1.2 var(--sans); margin: 0 0 20px;
     letter-spacing: -.005em; color: var(--ivory);
   }
   .empty h1 em { font-style: italic; color: var(--brass); }
@@ -159,7 +172,7 @@
     font: 400 9.5px/1 var(--sans); color: var(--dim);
     letter-spacing: .3em; text-transform: uppercase; margin-bottom: 9px;
   }
-  .you .qt { font: 300 17px/1.5 var(--serif); color: var(--ivory); font-size: 18px; }
+  .you .qt { font: 400 16px/1.5 var(--sans); color: var(--ivory); }
 
   /* ── Audit trail ────────────────────────────────────────────────────── */
   details.act {
@@ -199,7 +212,7 @@
   }
   .answer .md { font-size: 15px; color: #ded8cc; }
   .answer .md h3 {
-    font: 400 21px/1.3 var(--serif); margin: 26px 0 10px; color: var(--ivory);
+    font: 600 15px/1.4 var(--sans); margin: 24px 0 9px; color: var(--ivory);
     letter-spacing: .01em;
   }
   .answer .md h3:first-child { margin-top: 0; }

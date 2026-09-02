@@ -22,6 +22,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from google.adk.cli.fast_api import get_fast_api_app
 
 ROOT = Path(__file__).resolve().parent
@@ -36,6 +37,10 @@ adk_app = get_fast_api_app(agents_dir=str(ROOT / "orchestrator"), web=True)
 
 app = FastAPI(title="The Backlot — Control Room")
 app.mount("/adk", adk_app)
+# Brand assets: the Pinyon Script face the specialist marks are set in, its
+# OFL licence, and the rendered letter PNGs. Served as plain static files so
+# the console needs no font CDN for its own marks.
+app.mount("/marks", StaticFiles(directory=str(WEB / "marks")), name="marks")
 
 
 @app.get("/api/health")
