@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = Path(__file__).parent
 FONTS = Path("C:/Users/ferna/AppData/Roaming/Claude/local-agent-mode-sessions"
@@ -128,7 +128,8 @@ def aperture_mask(size: int, only: int | None = None) -> Image.Image:
 WIDEN = 1.34
 
 
-def letter_mask(ch: str, target: int, fnt_path: Path, turn: float = 0.0) -> Image.Image:
+def letter_mask(ch: str, target: int, fnt_path: Path, turn: float = 0.0,
+                weight: int = 0) -> Image.Image:
     """A glyph fitted to a `target` box and turned onto its blade.
 
     Pinyon's capitals vary enormously in width, so fitting by font-size alone
@@ -143,6 +144,13 @@ def letter_mask(ch: str, target: int, fnt_path: Path, turn: float = 0.0) -> Imag
     g = tmp.crop(tmp.getbbox())
     k = min(target / g.width, target / g.height)
     g = g.resize((max(int(g.width * k * WIDEN), 1), max(int(g.height * k), 1)), Image.LANCZOS)
+    # Synthetic weight. Measured on this face, a mark of 54px puts the letter
+    # at 13x12 with a thinnest stroke of a single pixel — invisible on gold no
+    # matter how white it is made. Dilating the mask thickens the hairlines to
+    # something that can actually carry colour. Only needed at small sizes; at
+    # 150px the same strokes are already ~3px.
+    for _ in range(weight):
+        g = g.filter(ImageFilter.MaxFilter(3))
     if turn:
         # expand=True so the corners of a turned glyph are not clipped
         g = g.rotate(-turn, resample=Image.BICUBIC, expand=True)

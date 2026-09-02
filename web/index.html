@@ -141,10 +141,13 @@
      a starting point rather than the final one. */
   .agent .mk .ltr {
     font: 400 32px var(--initial); fill: url(#chrome);
-    /* Polished metal on brass has almost no edge contrast; a thin dark stroke
-       gives the letter a boundary without reading as an outline. */
-    stroke: #2b2419; stroke-width: .6; paint-order: stroke fill;
-    opacity: .5; transition: opacity .35s ease;
+    /* A white stroke under the fill, not a dark one. This face is a copperplate:
+       at a 54px mark its thinnest stroke measures a single pixel, and no colour
+       rescues a 1px line on gold. Stroking in the fill's own white thickens the
+       hairlines into something that can carry the metal at all — synthetic
+       weight, not an outline. */
+    stroke: #ffffff; stroke-width: 1.6; paint-order: stroke fill;
+    opacity: .55; transition: opacity .35s ease;
   }
   .agent.active .mk .ltr, .agent.done .mk .ltr { opacity: 1; }
 
@@ -477,13 +480,10 @@
     </linearGradient>
     <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"   stop-color="#ffffff"/>
-      <stop offset="20%"  stop-color="#ffffff"/>
-      <stop offset="36%"  stop-color="#dce7f1"/>
-      <stop offset="46%"  stop-color="#7f8fa1"/>
-      <stop offset="50%"  stop-color="#42505f"/>
-      <stop offset="54%"  stop-color="#ffffff"/>
-      <stop offset="76%"  stop-color="#ffffff"/>
-      <stop offset="88%"  stop-color="#cfdce8"/>
+      <stop offset="30%"  stop-color="#ffffff"/>
+      <stop offset="46%"  stop-color="#e4edf6"/>
+      <stop offset="52%"  stop-color="#c4d2e0"/>
+      <stop offset="58%"  stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#ffffff"/>
     </linearGradient>
     <g id="aperture" fill="url(#goldMark)">
@@ -590,7 +590,7 @@ function bladeCentre(k) {
    glyph fit, the horizontal axis is stretched up to a third again, as far as
    the blade still allows. Copperplate capitals are tall and narrow, and at a
    size that fits their height they look thin sitting in a wedge. */
-const BLADE_W = 34, BLADE_H = 23, WIDEN = 1.34;
+const BLADE_W = 37, BLADE_H = 25, WIDEN = 1.34;
 function fitBladeLetters(scope) {
   scope.querySelectorAll("svg.mk text.ltr").forEach(t => {
     t.removeAttribute("transform");
