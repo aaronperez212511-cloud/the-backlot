@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="The Backlot">
+  <title>The Backlot</title>
+  <defs><path id="b" d="M50.7 30.01 L66.96 39.4 L94.56 43.74 L69.73 9.55 Z"/></defs>
+  <g fill="currentColor" color="#c9a961">
+    <use href="#b" transform="rotate(0 50 50)"/>
+    <use href="#b" transform="rotate(60 50 50)"/>
+    <use href="#b" transform="rotate(120 50 50)"/>
+    <use href="#b" transform="rotate(180 50 50)"/>
+    <use href="#b" transform="rotate(240 50 50)"/>
+    <use href="#b" transform="rotate(300 50 50)"/>
+  </g>
+</svg>
