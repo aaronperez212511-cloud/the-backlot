@@ -12,9 +12,9 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
-from render_plate import (GOLD, INK, aperture_mask, blade_centre, font,
+from render_plate import (CHROME, GOLD, INK, aperture_mask, blade_centre, font,
                           letter_mask, plate_metal, tracked, PINYON)
 
 HERE = Path(__file__).parent
@@ -27,6 +27,8 @@ TYPE = 1.42
 DIM, FAINT, HAIR, LINE = (104, 98, 86), (60, 57, 51), (44, 42, 38), (74, 69, 60)
 CHROME_TXT = (222, 216, 204)
 WHITE = (255, 255, 255)   # intense white for the one label that must never be missed
+BRIGHT_RED = (240, 52, 40)   # solid, saturated — reads as red at a glance, no glow
+NEON_RED = (255, 16, 68)     # the glow does the work; the core alone would look plain
 
 AGENTS = [
     ("C", "chain_of_title", "royalty integrity"),
@@ -59,15 +61,20 @@ def mark(cv, x, y, size, k):
     lit = Image.new("L", cv.size, 0)
     lit.paste(aperture_mask(size, only=k), (x, y))
     plate_metal(cv, lit, GOLD)
-    gx, gy = blade_centre(k)
-    lm = letter_mask(AGENTS[k][0], int(size * 0.155), PINYON, turn=k * 60)
+    # Centred in the opening, not on the blade — the opening is a near-black
+    # hole, and a bright letter has real contrast against it on its own.
+    # This letter was previously filled with a near-black ramp (a debossed,
+    # ink-into-gold look left over from an early pass) and never brought in
+    # line with CHROME, the bright fill the plate and gallery already use —
+    # dark ink on gold at this size was close to invisible, not merely subtle.
+    lm = letter_mask(AGENTS[k][0], int(size * 0.30), PINYON, widen=1.0)
     full = Image.new("L", cv.size, 0)
-    full.paste(lm, (int(x + gx / 100 * size - lm.width / 2),
-                    int(y + gy / 100 * size - lm.height / 2)))
-    plate_metal(cv, full, [(0.0, (14, 16, 20)), (0.5, (4, 5, 7)), (1.0, (30, 34, 40))])
+    full.paste(lm, (int(x + size / 2 - lm.width / 2),
+                    int(y + size / 2 - lm.height / 2)))
+    plate_metal(cv, full, CHROME)
 
 
-def main() -> None:
+def main(style: str = "bright") -> None:
     cw, chh = W * SS, H * SS
     cv = Image.new("RGBA", (cw, chh), INK + (255,))
     d = ImageDraw.Draw(cv)
@@ -76,6 +83,20 @@ def main() -> None:
 
     mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
     monob = lambda s: font("GeistMono-Bold.ttf", S(s * TYPE))
+
+    def neon(xy, text, fnt, track, anchor="ms", blur=S(5), passes=2):
+        """A neon-tube glow: a blurred colour layer under a sharp core, both in
+        NEON_RED. A single blur pass under-lights a thin bold face at this size,
+        so the blurred layer is composited `passes` times to build real brightness
+        without softening the core it sits under."""
+        mask = Image.new("L", (cw, chh), 0)
+        tracked(ImageDraw.Draw(mask), xy, text, fnt, 255, track, anchor)
+        glow_src = Image.new("RGBA", (cw, chh), NEON_RED + (0,))
+        glow_src.putalpha(mask)
+        glow = glow_src.filter(ImageFilter.GaussianBlur(blur))
+        for _ in range(passes):
+            cv.alpha_composite(glow)
+        tracked(d, xy, text, fnt, NEON_RED, track, anchor)
 
     # header
     # Two labels, not three. A centred one between two others has nowhere to go
@@ -139,9 +160,13 @@ def main() -> None:
         # cells, that they touch — measured, not eyeballed, after the first
         # render showed it.
         tracked(d, (cx, y + sm + S(46)), name, monob(17), WHITE, S(1), anchor="ms")
-        tracked(d, (cx, y + sm + S(74)), role, mono(15), FAINT, S(2), anchor="ms")
-        tracked(d, (cx, y + sm + S(106)), "gemini-2.5-flash" if k else "gemini-2.5-pro",
-                mono(14), (78, 74, 66), S(2), anchor="ms")
+        model = "gemini-2.5-flash" if k else "gemini-2.5-pro"
+        if style == "neon":
+            neon((cx, y + sm + S(74)), role, monob(15), S(2))
+            neon((cx, y + sm + S(106)), model, monob(14), S(2))
+        else:
+            tracked(d, (cx, y + sm + S(74)), role, monob(15), BRIGHT_RED, S(2), anchor="ms")
+            tracked(d, (cx, y + sm + S(106)), model, monob(14), BRIGHT_RED, S(2), anchor="ms")
 
     # ── clickhouse ──────────────────────────────────────────────────────────
     ty = S(1322)
@@ -162,10 +187,12 @@ def main() -> None:
     tracked(d, (M, S(1550)), "ONE DATA FOUNDATION  ·  SIX SPECIALISTS  ·  ONE COMMAND CENTER",
             mono(18), FAINT, S(6))
 
-    out = HERE / "the-backlot-architecture.png"
+    suffix = "" if style == "bright" else f"-{style}"
+    out = HERE / f"the-backlot-architecture{suffix}.png"
     cv.convert("RGB").resize((OUT_W, round(OUT_W * H / W)), Image.LANCZOS).save(out)
     print(f"  {out.name}  {OUT_W}x{round(OUT_W * H / W)}")
 
 
 if __name__ == "__main__":
-    main()
+    main("bright")
+    main("neon")

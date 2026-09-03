@@ -83,11 +83,12 @@ def identity_card(out: Path) -> None:
         lit = Image.new("L", (cw, ch), 0)
         lit.paste(aperture_mask(sm, only=k), (x, y))
         plate_metal(cv, lit, GOLD)
-        gx, gy = blade_centre(k)
-        lm = letter_mask(ch_, int(sm * 0.23), PINYON, turn=k * 60, weight=1)
+        # Centred in the opening, not on the blade — see the note in
+        # render_architecture.mark() for why.
+        lm = letter_mask(ch_, int(sm * 0.30), PINYON, widen=1.0)
         full = Image.new("L", (cw, ch), 0)
-        full.paste(lm, (int(x + gx / 100 * sm - lm.width / 2),
-                        int(y + gy / 100 * sm - lm.height / 2)))
+        full.paste(lm, (int(x + sm / 2 - lm.width / 2),
+                        int(y + sm / 2 - lm.height / 2)))
         plate_metal(cv, full, BRIGHT)
         # Same measured constraint as the architecture diagram: at 20 the two
         # longest names touch in adjacent cells. 17 clears it with margin.

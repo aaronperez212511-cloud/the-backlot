@@ -132,21 +132,26 @@ WIDEN = 1.34
 
 
 def letter_mask(ch: str, target: int, fnt_path: Path, turn: float = 0.0,
-                weight: int = 0) -> Image.Image:
-    """A glyph fitted to a `target` box and turned onto its blade.
+                weight: int = 0, widen: float | None = None) -> Image.Image:
+    """A glyph fitted to a `target` box.
 
     Pinyon's capitals vary enormously in width, so fitting by font-size alone
-    leaves the six visibly mismatched. The fit is then stretched horizontally —
-    copperplate capitals are tall and narrow, and at a height that fits a wedge
-    they look thin. `turn` rotates the glyph with its blade so the six read as
-    one turn of a single ring rather than six upright letters.
+    leaves the six visibly mismatched. The fit is then stretched horizontally by
+    `widen` (defaults to the module WIDEN) — copperplate capitals are tall and
+    narrow, and at a height that fits a wedge they look thin. That stretch is
+    right for a letter sitting on a blade, but wrong for one centred in the
+    aperture's round opening: widened past `target` there, it can reach the
+    hexagon's flat edges. Pass `widen=1.0` to keep both dimensions within
+    `target`. `turn` rotates the glyph with its blade; leave it 0 to keep the
+    glyph upright when it is centred rather than riding a blade.
     """
+    w = WIDEN if widen is None else widen
     f = ImageFont.truetype(str(fnt_path), target * 3)
     tmp = Image.new("L", (target * 9, target * 9), 0)
     ImageDraw.Draw(tmp).text((target * 4, target * 4), ch, font=f, fill=255, anchor="mm")
     g = tmp.crop(tmp.getbbox())
     k = min(target / g.width, target / g.height)
-    g = g.resize((max(int(g.width * k * WIDEN), 1), max(int(g.height * k), 1)), Image.LANCZOS)
+    g = g.resize((max(int(g.width * k * w), 1), max(int(g.height * k), 1)), Image.LANCZOS)
     # Synthetic weight. Measured on this face, a mark of 54px puts the letter
     # at 13x12 with a thinnest stroke of a single pixel — invisible on gold no
     # matter how white it is made. Dilating the mask thickens the hairlines to
@@ -337,11 +342,12 @@ def main() -> None:
         lit.paste(aperture_mask(sm, only=k), (sx, sy))
         plate_metal(cv, lit, GOLD)
 
-        gx, gy = blade_centre(k)
-        lm = letter_mask(ch_, int(sm * 0.155), PINYON, turn=k * 60)
+        # Centred in the opening, not on the blade — see the note in
+        # render_architecture.mark() for why.
+        lm = letter_mask(ch_, int(sm * 0.30), PINYON, widen=1.0)
         full = Image.new("L", (cw, ch), 0)
-        full.paste(lm, (int(sx + gx / 100 * sm - lm.width / 2),
-                        int(sy + gy / 100 * sm - lm.height / 2)))
+        full.paste(lm, (int(sx + sm / 2 - lm.width / 2),
+                        int(sy + sm / 2 - lm.height / 2)))
         plate_metal(cv, full, CHROME)
 
         d.line([(cx, sy + sm + S(34)), (cx, sy + sm + S(54))], fill=HAIR, width=max(SS, 1))
