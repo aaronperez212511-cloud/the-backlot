@@ -1,55 +1,134 @@
 # The Backlot — 3-minute demo video script
 
-Devpost requires a demo of the project *as built*, not a cinematic trailer — but nothing stops the framing from being cinematic. Record against the **Control Room console** (`python server.py` → http://localhost:8080, or the deployed Cloud Run URL), not the ADK developer UI: the console shows the specialists lighting up and the SQL they run, which is the whole argument.
+Record against the **deployed Control Room console**
+(`https://the-backlot-203953305168.us-central1.run.app`), not localhost and not
+the ADK developer UI. Two reasons: the rules ask for the project running on the
+platform it was built for, and the console is the argument — it shows which
+specialists were consulted and the SQL they actually ran. The ADK dev UI shows
+neither.
 
-Every beat below has been run end to end against live ClickHouse Cloud. The figures are from the current dataset; regenerate and they shift slightly, so read them off the screen rather than from this file.
+Every beat below has been run end to end against live ClickHouse Cloud. Figures
+shift when the dataset is regenerated, so **read the numbers off your screen,
+not out of this file.**
 
 ---
 
-**0:00–0:20 — Cold open, the premise**
+## Read this before you record
+
+**An investigation takes two to four minutes.** That is real Gemini reasoning
+plus real ClickHouse round trips, and it will not go faster on camera. Three
+investigations do not fit into a three-minute video in real time — so plan the
+edit instead of discovering this while recording:
+
+- Run each investigation **live and in full**, then **cut the waiting** in the
+  edit. A jump cut between the question and the answer is normal and honest.
+- Do **not** stage it: no typing the answer in by hand, no screenshots posing as
+  live output. The rules require the project to work as shown, and it does.
+- Leave a few seconds of the spinner in the first beat so it reads as real work,
+  then cut.
+
+**Warm everything up first.** ClickHouse Cloud auto-suspends and its first query
+after idle can take ~30s; Cloud Run cold-starts too. Run one throwaway
+investigation a few minutes before recording so neither happens on camera.
+
+**Each beat names the judging criterion it serves.** All four are weighted
+equally, so none of them is padding.
+
+---
+
+## 0:00–0:18 — Cold open  *(Potential impact)*
+
 Screen: the Control Room console, empty, six specialists idle in the sidebar.
-VO: *"Midnight Marquee premieres globally in five minutes. Six things can go wrong tonight — a rights holder underpaid, an ad slot gone blank, a bot ring watching for free, a region buffering out, an exec asking why, an audience quietly leaving. Most studios run six separate tools for these, and none of them talk to each other. The Backlot runs six specialists over one ClickHouse foundation — and one orchestrator whose job is to connect them."*
 
-**0:20–1:10 — The incident, live** *(the money shot)*
-Click preset 1: *"What happened during the Midnight Marquee premiere in Brazil? Check both playback health and ad revenue, and tell me whether they share a root cause."*
+> *"Midnight Marquee premieres globally in five minutes. Six things can go wrong
+> tonight — a rights holder underpaid, an ad slot gone blank, a bot ring watching
+> for free, a region buffering out, an executive asking why, an audience quietly
+> leaving. Most studios run six separate tools for these, and none of them talk
+> to each other."*
 
-Point at the sidebar as `premiere_pulse` and `ghost_ads` light up, then open the activity trace to show the real SQL hitting ClickHouse. The answer comes back as one report:
+## 0:18–1:05 — The incident  *(Quality of idea — the money shot)*
 
-> **Root cause** — playback degradation on CDN node `sa-east-1b` in Brazil, ~19:05–19:20 UTC.
-> **Findings** — ~$11.6k of ad revenue lost to SSAI stitch failures; buffering ~9x baseline; drop-off 34%.
+Click preset 01: *"What happened during the Midnight Marquee premiere in Brazil?
+Check both playback health and ad revenue, and tell me whether they share a root
+cause."*
 
-VO: *"Two specialists, two different domains, two symptoms — and one root cause. Neither agent could have said that alone: the playback agent can't see ad revenue, and the ads agent can't see CDN telemetry. That correlation is the entire reason this is a fleet and not six demos."*
+Let the spinner run a few seconds. Point at the sidebar as **premiere_pulse** and
+**ghost_ads** light up. Cut. Then open the activity trace and scroll it — real
+SQL against ClickHouse, on screen.
 
-Say the architectural line out loud, it's the differentiator: *"In ADK this only works because the specialists are attached as tools that return their findings — not as sub-agents that take over the conversation."*
+The answer comes back as one report:
 
-**1:10–1:50 — Chain of Title, the flagship**
-Click preset 2: *"Audit the royalty payments. Show me the arithmetic behind any discrepancy."*
+> **Root cause** — degradation on CDN node `sa-east-1b` in Brazil, 19:00–19:30 UTC.
+> **Findings** — ad revenue lost to stitch failures on that node; buffering ~9x
+> baseline; drop-off ~37%.
 
-Show it pulling the raw `source_clause`, calling Gemini (`parse_rights_clause`) to turn contract prose into computable terms, then the arithmetic on screen: units × base rate below the threshold, units × escalated rate above it, expected vs. paid, the gap. Two findings — an escalation tier that triggered but was paid at base rate, and a flat fee paid short.
+> *"Two specialists, two domains, two symptoms — one root cause. Neither could
+> have said that alone: the playback agent cannot see ad revenue, and the ads
+> agent cannot see CDN telemetry. That correlation is the entire reason this is a
+> fleet and not six demos."*
 
-VO: *"Every number here is re-derivable from the warehouse: stream counts, watch minutes, attributed ad revenue. Nothing is a magic constant. That's what makes this forensic accounting a lawyer could follow, not a dashboard."*
+Say the architectural line out loud — it is the differentiator:
 
-**1:50–2:20 — Fraud Sentinel + Churn**
-Quick cuts. Preset 3 flags one device fingerprint shared by 90 accounts with impossible travel and session concurrency — and, importantly, does **not** flag the hundreds of legitimate multi-account households and venue devices in the same data. Then the churn finding: *Static Bloom* collapsing ~60% in watch time two weeks after release, corroborated by sentiment turning negative over the same days.
+> *"In ADK this only works because the specialists are attached as tools that
+> return their findings. As sub-agents they take over the conversation and never
+> hand it back, and the orchestrator never sees two findings at once."*
 
-VO: *"The ring is hiding in a realistic crowd. Fan-out alone isn't fraud — it takes corroboration."*
+## 1:05–1:45 — Chain of Title  *(Technological implementation)*
 
-**2:20–2:45 — Proof, not vibes**
-Cut to a terminal. Run `python clickhouse/verify_anomalies.py` — 18 checks passing against live ClickHouse. Then show `eval/backlot.evalset.json` and the ADK rubric eval command.
+Click preset 02: *"Audit the royalty payments for Midnight Marquee. Show me the
+arithmetic behind any discrepancy."*
 
-VO: *"The ground truth is in the repo. This script asserts every seeded anomaly against the live database, including that the decoys exist so detection isn't trivial. And ADK's rubric judge scores the fleet against 23 rubrics generated from that same file — two of which check the agents DON'T invent findings that aren't there."*
+Show it pull the raw `source_clause`, call Gemini to turn contract prose into
+computable terms, then the arithmetic on screen: units at the base rate below the
+threshold, units at the escalated rate above it, expected versus paid, the gap.
 
-**2:45–3:00 — Close**
-Show the architecture diagram for two seconds.
-VO: *"Six specialists, one ClickHouse foundation, one orchestrator that connects the dots. Gemini 2.5 on Vertex AI, the Agent Development Kit, and the official ClickHouse MCP server — live, end to end. This is The Backlot."*
+> *"Every number here is re-derivable from the warehouse — stream counts, watch
+> minutes, attributed ad revenue. Nothing is a magic constant. That is what makes
+> this forensic accounting a lawyer could follow, instead of a dashboard."*
+
+## 1:45–2:12 — Fraud, and restraint  *(Design)*
+
+Preset 03. One device fingerprint shared across 90 accounts, corroborated by
+impossible travel and session concurrency — and note what it does **not** flag:
+the legitimate multi-account households and venue devices sitting in the same
+data.
+
+> *"The ring is hiding in a realistic crowd. Fan-out alone is not fraud — it takes
+> corroboration. And notice it consulted one specialist, not six: this is a
+> single-domain question, and the orchestrator routes rather than firing at
+> everything."*
+
+## 2:12–2:42 — Proof, not vibes  *(Technological implementation)*
+
+Cut to a terminal. Run `python clickhouse/verify_anomalies.py` — **20 checks**
+against live ClickHouse. Then show the ADK rubric eval command.
+
+> *"The ground truth is in the repo. This asserts every seeded anomaly against the
+> live database — including that the decoys exist, so detection is not trivial.
+> And ADK's rubric judge scores the fleet against 23 rubrics generated from that
+> same ground-truth file. Two of them check the agents do not invent findings
+> that aren't there."*
+
+## 2:42–3:00 — Close  *(Potential impact)*
+
+Show `design/the-backlot-architecture.png` for three seconds — the two-way arrows
+between Control Room and the fleet are the whole story in one frame.
+
+> *"Six specialists, one ClickHouse foundation, one orchestrator that connects the
+> dots. Gemini 2.5 on Vertex AI, the Agent Development Kit, and the official
+> ClickHouse MCP server — live, end to end. This is The Backlot."*
 
 ---
 
 ## Recording checklist
-- [ ] Run `python clickhouse/verify_anomalies.py` first — if anything fails, the demo will too
-- [ ] Record against the Control Room console, not the ADK dev UI
-- [ ] Screen record at 1080p+, agent responses legible at full screen
-- [ ] English audio or English burned-in captions (submission requirement)
-- [ ] Open the activity trace at least once so real ClickHouse SQL is visible on screen
-- [ ] Keep it under 3:00 — only the first three minutes are judged
-- [ ] Upload to YouTube/Vimeo as **public**, link it in the Devpost submission
+
+- [ ] `python clickhouse/verify_anomalies.py` → **20/20**. If it fails, the demo will too
+- [ ] Warm-up investigation run a few minutes before, so no cold start on camera
+- [ ] Recording against the **deployed Cloud Run URL**, not localhost
+- [ ] 1080p or better; agent responses legible at full screen
+- [ ] Activity trace opened at least once, with real ClickHouse SQL visible
+- [ ] Waiting time cut in the edit — never staged or re-typed
+- [ ] English audio, or English subtitles burned in / uploaded as a track
+- [ ] Under 3:00 — only the first three minutes are judged
+- [ ] Uploaded to YouTube or Vimeo as **public**, playable from an incognito window
+- [ ] URL pasted into the Devpost form (see `DEVPOST.md`)
