@@ -683,7 +683,16 @@ async function boot() {
   } catch (e) {
     $("#cdot").className = "dot err";
     $("#ctext").textContent = "offline";
+    return;
   }
+  // Deep links. ?ask=2 fires preset 2, ?q=<text> asks anything — so a single
+  // URL reproduces an investigation exactly, for a screenshot, a recording, or
+  // a judge who would rather click than type.
+  const p = new URLSearchParams(location.search);
+  const q = p.get("q");
+  const n = parseInt(p.get("ask"), 10);
+  if (q) ask(q);
+  else if (n >= 1 && n <= PRESETS.length) ask(PRESETS[n - 1][0]);
 }
 
 /* Turns the ADK event stream into something a human can audit: which
