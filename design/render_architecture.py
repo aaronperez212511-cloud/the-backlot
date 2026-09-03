@@ -26,6 +26,7 @@ TYPE = 1.42
 
 DIM, FAINT, HAIR, LINE = (104, 98, 86), (60, 57, 51), (44, 42, 38), (74, 69, 60)
 CHROME_TXT = (222, 216, 204)
+WHITE = (255, 255, 255)   # intense white for the one label that must never be missed
 
 AGENTS = [
     ("C", "chain_of_title", "royalty integrity"),
@@ -74,6 +75,7 @@ def main() -> None:
     M, CX = S(110), cw // 2
 
     mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
+    monob = lambda s: font("GeistMono-Bold.ttf", S(s * TYPE))
 
     # header
     # Two labels, not three. A centred one between two others has nowhere to go
@@ -130,7 +132,13 @@ def main() -> None:
         # two-way arrow: call down, finding back up
         arrow(d, cx, band_y + S(16), cx, y - S(18), LINE, w=SS, back=True)
         mark(cv, x, y, sm, k)
-        tracked(d, (cx, y + sm + S(42)), name, mono(16), CHROME_TXT, S(1), anchor="ms")
+        # The agent name is the single most load-bearing label in the diagram —
+        # bold and pure white, a clear step up from the role/model lines under it.
+        # 17, not the 20 first tried: at 20 the two longest names (performance_
+        # war_room, churn_early_warning) are wide enough, centred in adjacent
+        # cells, that they touch — measured, not eyeballed, after the first
+        # render showed it.
+        tracked(d, (cx, y + sm + S(46)), name, monob(17), WHITE, S(1), anchor="ms")
         tracked(d, (cx, y + sm + S(74)), role, mono(15), FAINT, S(2), anchor="ms")
         tracked(d, (cx, y + sm + S(106)), "gemini-2.5-flash" if k else "gemini-2.5-pro",
                 mono(14), (78, 74, 66), S(2), anchor="ms")

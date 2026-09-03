@@ -21,6 +21,7 @@ OUT_W = 3840                      # 4K-class export
 TYPE = 1.42                       # the small mono type was set too fine
 DIM, FAINT, HAIR = (104, 98, 86), (60, 57, 51), (44, 42, 38)
 IVORY = (231, 226, 216)
+WHITE = (255, 255, 255)
 
 AGENTS = [("C", "chain_of_title", "royalty integrity"),
           ("G", "ghost_ads", "ad-insertion leaks"),
@@ -42,6 +43,7 @@ def identity_card(out: Path) -> None:
     S = lambda v: int(v * SS)
     M, CX = S(120), cw // 2
     mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
+    monob = lambda s: font("GeistMono-Bold.ttf", S(s * TYPE))
     ital = lambda s: font("Italiana-Regular.ttf", S(s))
 
     tracked(d, (M, S(104)), "THE BACKLOT", mono(21), DIM, S(8))
@@ -87,7 +89,9 @@ def identity_card(out: Path) -> None:
         full.paste(lm, (int(x + gx / 100 * sm - lm.width / 2),
                         int(y + gy / 100 * sm - lm.height / 2)))
         plate_metal(cv, full, BRIGHT)
-        tracked(d, (cx, y + sm + S(46)), name, mono(16), IVORY, S(1), anchor="ms")
+        # Same measured constraint as the architecture diagram: at 20 the two
+        # longest names touch in adjacent cells. 17 clears it with margin.
+        tracked(d, (cx, y + sm + S(50)), name, monob(17), WHITE, S(1), anchor="ms")
         tracked(d, (cx, y + sm + S(78)), role, mono(14), FAINT, S(2), anchor="ms")
 
     d.line([(M, S(1452)), (cw - M, S(1452))], fill=HAIR, width=SS)

@@ -48,6 +48,7 @@ CHROME = [
 HAIR = (44, 42, 38)         # hairline ink, just above the threshold of sight
 DIM = (104, 98, 86)         # clinical annotation
 FAINT = (60, 57, 51)
+WHITE = (255, 255, 255)     # the one label that must read at a glance: agent names
 
 AGENTS = [("C", "CHAIN OF TITLE"), ("G", "GHOST ADS"), ("F", "FRAUD SENTINEL"),
           ("P", "PREMIERE PULSE"), ("W", "WAR ROOM"), ("E", "EARLY WARNING")]
@@ -250,6 +251,7 @@ def main() -> None:
     S = lambda v: int(v * SS)
 
     mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
+    monob = lambda s: font("GeistMono-Bold.ttf", S(s * TYPE))
     ital = lambda s: font("Italiana-Regular.ttf", S(s))
 
     M = S(200)                      # margin
@@ -344,7 +346,9 @@ def main() -> None:
 
         d.line([(cx, sy + sm + S(34)), (cx, sy + sm + S(54))], fill=HAIR, width=max(SS, 1))
         tracked(d, (cx, sy + sm + S(96)), f"{k + 1:02d}", mono(19), DIM, S(5), anchor="ms")
-        tracked(d, (cx, sy + sm + S(138)), name, mono(13), FAINT, S(3), anchor="ms")
+        # This was set in FAINT — almost the ink colour itself, effectively
+        # invisible against the ground. Bold, white, and a size step up.
+        tracked(d, (cx, sy + sm + S(148)), name, monob(19), WHITE, S(3), anchor="ms")
 
     # ── footer ──────────────────────────────────────────────────────────────
     rule(2648)
