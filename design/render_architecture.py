@@ -18,7 +18,7 @@ from render_plate import (GOLD, INK, aperture_mask, blade_centre, font,
                           letter_mask, plate_metal, tracked, PINYON)
 
 HERE = Path(__file__).parent
-W, H, SS = 2400, 1660, 2
+W, H, SS = 2400, 1600, 2
 
 DIM, FAINT, HAIR, LINE = (104, 98, 86), (60, 57, 51), (44, 42, 38), (74, 69, 60)
 CHROME_TXT = (222, 216, 204)
@@ -126,7 +126,7 @@ def main() -> None:
                 mono(14), (78, 74, 66), S(2), anchor="ms")
 
     # ── clickhouse ──────────────────────────────────────────────────────────
-    ty = S(1352)
+    ty = S(1322)
     for cx, y in tops:
         arrow(d, cx, y + sm + S(126), cx, ty - S(16), LINE, w=SS)
     kw, kh = cw - 2 * M, S(150)
@@ -140,8 +140,8 @@ def main() -> None:
     for i, t in enumerate(TABLES):
         tracked(d, (M + tcell * (i + 0.5), ty + S(108)), t, mono(16), DIM, S(2), anchor="ms")
 
-    d.line([(M, S(1562)), (cw - M, S(1562))], fill=HAIR, width=SS)
-    tracked(d, (M, S(1606)), "ONE DATA FOUNDATION  ·  SIX SPECIALISTS  ·  ONE COMMAND CENTER",
+    d.line([(M, S(1504)), (cw - M, S(1504))], fill=HAIR, width=SS)
+    tracked(d, (M, S(1550)), "ONE DATA FOUNDATION  ·  SIX SPECIALISTS  ·  ONE COMMAND CENTER",
             mono(18), FAINT, S(6))
 
     out = HERE / "the-backlot-architecture.png"
