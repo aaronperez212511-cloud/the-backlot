@@ -18,7 +18,11 @@ from render_plate import (GOLD, INK, aperture_mask, blade_centre, font,
                           letter_mask, plate_metal, tracked, PINYON)
 
 HERE = Path(__file__).parent
-W, H, SS = 2400, 1600, 2
+W, H, SS = 2400, 1600, 3        # design units; exported at OUT_W
+OUT_W = 3840                     # 4K-class export
+# The clinical labels were set for a 2400px export and are unreadable once
+# the image is viewed small. Everything mono grows by this factor.
+TYPE = 1.42
 
 DIM, FAINT, HAIR, LINE = (104, 98, 86), (60, 57, 51), (44, 42, 38), (74, 69, 60)
 CHROME_TXT = (222, 216, 204)
@@ -69,26 +73,32 @@ def main() -> None:
     S = lambda v: int(v * SS)
     M, CX = S(110), cw // 2
 
-    mono = lambda s: font("GeistMono-Regular.ttf", S(s))
+    mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
 
     # header
-    tracked(d, (M, S(96)), "THE BACKLOT", mono(22), DIM, S(8))
-    tracked(d, (CX, S(96)), "SYSTEM ARCHITECTURE", mono(22), FAINT, S(8), anchor="ms")
+    # Two labels, not three. A centred one between two others has nowhere to go
+    # once the type grows, and it collided with the right-hand label outright.
+    tracked(d, (M, S(96)), "THE BACKLOT  ·  SYSTEM ARCHITECTURE", mono(22), DIM, S(8))
     lbl = "AGENTIC CINEMA · CLICKHOUSE TRACK"
     wlbl = sum(d.textlength(c, font=mono(22)) for c in lbl) + S(8) * (len(lbl) - 1)
     tracked(d, (cw - M - wlbl, S(96)), lbl, mono(22), FAINT, S(8))
     d.line([(M, S(132)), (cw - M, S(132))], fill=HAIR, width=SS)
 
     # ── ops question ────────────────────────────────────────────────────────
-    bw, bh = S(1120), S(96)
-    bx, by = CX - bw // 2, S(196)
-    tracked(d, (bx, by - S(18)), "OPS", mono(16), FAINT, S(6))
+    # Measure the line and size the box from it. A fixed width was fine for the
+    # old type size and overflowed the moment the type grew — a box can never be
+    # narrower than what it contains.
+    q = "“what happened during the premiere — do they share a root cause?”"
+    qf = font("GeistMono-Regular.ttf", S(24 * TYPE))
+    qtrack = S(2)
+    qw = sum(d.textlength(c, font=qf) for c in q) + qtrack * (len(q) - 1)
+    bw, bh = int(qw + S(120)), S(116)
+    bx, by = CX - bw // 2, S(200)
+    tracked(d, (bx, by - S(22)), "OPS", mono(16), FAINT, S(6))
     d.rectangle([bx, by, bx + bw, by + bh], outline=LINE, width=SS)
-    tracked(d, (CX, by + S(60)),
-            "“what happened during the premiere — do they share a root cause?”",
-            font("GeistMono-Regular.ttf", S(24)), CHROME_TXT, S(2), anchor="ms")
+    tracked(d, (CX, by + S(72)), q, qf, CHROME_TXT, qtrack, anchor="ms")
 
-    arrow(d, CX, by + bh + S(14), CX, S(408), LINE, w=SS)
+    arrow(d, CX, by + bh + S(16), CX, S(408), LINE, w=SS)
 
     # ── control room ────────────────────────────────────────────────────────
     ap = S(230)
@@ -145,8 +155,8 @@ def main() -> None:
             mono(18), FAINT, S(6))
 
     out = HERE / "the-backlot-architecture.png"
-    cv.convert("RGB").resize((W, H), Image.LANCZOS).save(out)
-    print(f"  {out.name}  {W}x{H}")
+    cv.convert("RGB").resize((OUT_W, round(OUT_W * H / W)), Image.LANCZOS).save(out)
+    print(f"  {out.name}  {OUT_W}x{round(OUT_W * H / W)}")
 
 
 if __name__ == "__main__":

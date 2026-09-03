@@ -16,7 +16,9 @@ from render_plate import (GOLD, INK, aperture_mask, blade_centre, font,
                           letter_mask, plate_metal, tracked, PINYON)
 
 HERE = Path(__file__).parent
-W, H, SS = 2400, 1600, 2          # 3:2
+W, H, SS = 2400, 1600, 3          # 3:2 design units
+OUT_W = 3840                      # 4K-class export
+TYPE = 1.42                       # the small mono type was set too fine
 DIM, FAINT, HAIR = (104, 98, 86), (60, 57, 51), (44, 42, 38)
 IVORY = (231, 226, 216)
 
@@ -39,7 +41,7 @@ def identity_card(out: Path) -> None:
     d = ImageDraw.Draw(cv)
     S = lambda v: int(v * SS)
     M, CX = S(120), cw // 2
-    mono = lambda s: font("GeistMono-Regular.ttf", S(s))
+    mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
     ital = lambda s: font("Italiana-Regular.ttf", S(s))
 
     tracked(d, (M, S(104)), "THE BACKLOT", mono(21), DIM, S(8))
@@ -92,8 +94,8 @@ def identity_card(out: Path) -> None:
     tracked(d, (M, S(1500)), "GEMINI 2.5 ON VERTEX AI  ·  GOOGLE ADK  ·  CLICKHOUSE CLOUD VIA MCP",
             mono(19), FAINT, S(6))
 
-    cv.convert("RGB").resize((W, H), Image.LANCZOS).save(out)
-    print(f"  {out.name}  {W}x{H}")
+    cv.convert("RGB").resize((OUT_W, round(OUT_W * H / W)), Image.LANCZOS).save(out)
+    print(f"  {out.name}  {OUT_W}x{round(OUT_W * H / W)}")
 
 
 def main() -> None:

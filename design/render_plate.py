@@ -23,7 +23,9 @@ FONTS = Path("C:/Users/ferna/AppData/Roaming/Claude/local-agent-mode-sessions"
              "/31ed2610-e913-4536-8f24-cc25bf85f158/skills/canvas-design/canvas-fonts")
 PINYON = HERE.parent / "web" / "marks" / "PinyonScript-Regular.ttf"
 
-W, H = 2400, 2920
+W, H = 2400, 2920           # design units; exported at OUT_W
+OUT_W = 3840                # 4K-class export
+TYPE = 1.42                 # the clinical type was set too fine to read small
 SS = 2                      # supersample
 INK = (9, 9, 11)
 
@@ -247,7 +249,7 @@ def main() -> None:
     d = ImageDraw.Draw(cv)
     S = lambda v: int(v * SS)
 
-    mono = lambda s: font("GeistMono-Regular.ttf", S(s))
+    mono = lambda s: font("GeistMono-Regular.ttf", S(s * TYPE))
     ital = lambda s: font("Italiana-Regular.ttf", S(s))
 
     M = S(200)                      # margin
@@ -342,7 +344,7 @@ def main() -> None:
 
         d.line([(cx, sy + sm + S(34)), (cx, sy + sm + S(54))], fill=HAIR, width=max(SS, 1))
         tracked(d, (cx, sy + sm + S(96)), f"{k + 1:02d}", mono(19), DIM, S(5), anchor="ms")
-        tracked(d, (cx, sy + sm + S(132)), name, mono(15), FAINT, S(4), anchor="ms")
+        tracked(d, (cx, sy + sm + S(138)), name, mono(13), FAINT, S(3), anchor="ms")
 
     # ── footer ──────────────────────────────────────────────────────────────
     rule(2648)
@@ -350,7 +352,7 @@ def main() -> None:
     w = sum(d.textlength(c, font=mono(21)) for c in "ONE LIGHT · TWO METALS") + S(7) * 21
     tracked(d, (cw - M - w, S(2710)), "ONE LIGHT · TWO METALS", mono(21), FAINT, S(7))
 
-    out = cv.convert("RGB").resize((W, H), Image.LANCZOS)
+    out = cv.convert("RGB").resize((OUT_W, round(OUT_W * H / W)), Image.LANCZOS)
     p = HERE / "aurum-reflex-plate-vi.png"
     out.save(p, quality=97)
     print(f"  {p.name}  {out.width}x{out.height}")
