@@ -110,11 +110,14 @@
     color: var(--dim); margin: 0 0 18px;
   }
   .agent {
-    display: flex; gap: 13px; align-items: center; padding: 11px 12px;
+    display: flex; gap: 14px; align-items: center; padding: 7px 12px;
     border: 1px solid transparent; border-radius: 3px; margin-bottom: 3px;
     transition: background .35s ease, border-color .35s ease;
   }
-  .agent .mk { width: 54px; height: 54px; flex-shrink: 0; }
+  /* 72px, not 54: measured on this face, a 54px mark leaves the initial's
+     thinnest stroke at a single pixel and it cannot be seen on gold at any
+     brightness. At 72 the same stroke measures ~2px and reads. */
+  .agent .mk { width: 72px; height: 72px; flex-shrink: 0; }
   .agent.active { background: var(--ink-3); border-color: #2f2a22; }
   .agent.done   { background: var(--ink-3); border-color: var(--line); }
   .agent .nm {
