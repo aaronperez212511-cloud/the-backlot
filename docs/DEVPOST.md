@@ -1,167 +1,291 @@
-# Devpost submission — copy each block into its field
+# Devpost submission — field by field
 
-Everything below is in English, as the rules require. Track to select: **ClickHouse**.
+Everything in English, as the rules require. Track: **ClickHouse**.
+Every claim below is something the repo or the hosted URL can be checked against.
 
 ---
 
-## Project name
+# 1 · Resumen del proyecto
+
+## Nombre del proyecto  *(máx. 60)*
 
 ```
 The Backlot
 ```
 
-## Elevator pitch
+## Discurso de presentación  *(máx. 200 — este usa 196)*
 
 ```
 Six Gemini specialists on one ClickHouse foundation, and an orchestrator that connects their findings — because a buffering spike and a blank ad slot are often the same incident wearing two costumes.
 ```
 
+Shorter alternative if you prefer room to spare *(148)*:
+
+```
+Six Gemini specialists over one ClickHouse foundation, and an orchestrator whose job is connecting what they each find — not just routing questions.
+```
+
 ---
 
-## Description
+# 2 · Sobre el proyecto
 
-### The problem
+> Paste the whole block below into the Markdown editor.
 
-A streaming studio bleeds money in six ordinary ways at once, and each one is
-usually somebody else's job. Rights holders get underpaid because royalty maths
-is a black box nobody can audit. Live ad slots fail silently and the advertiser
-notices before operations does. Bot rings watch for free and poison the numbers
-advertisers pay against. A premiere degrades in one region. An executive asks
-"why", and gets a dashboard instead of an answer. A title quietly loses its
-audience for weeks.
+```markdown
+## Inspiration
 
-The usual response is six point tools with six datasets, and nothing any of them
-finds can ever relate to what another finds. That ceiling is the actual problem.
+Somewhere in every streaming studio there is a person in rights administration
+who cannot explain a royalty payment. Not because they are careless — because
+the calculation lives across a contract written in prose, a stream count in a
+warehouse, and a ledger that says a number with no working shown. When a rights
+holder asks "why is this the amount?", the honest answer is often "I'd have to
+reconstruct it."
 
-### What it does
+That person has counterparts. The ad-ops engineer who learns a live slot went
+blank when the advertiser disputes the invoice. The on-call streaming engineer
+who finds out a region degraded from social media. The analyst asked "why did
+this title drop?" who can produce a chart but not a cause.
 
-The Backlot is a studio operations command center: **six specialist agents over
-one shared ClickHouse database, coordinated by an orchestrator whose job is
-correlation, not routing.**
+Six people, six problems, six separate tools — and none of those tools can see
+what the others see. That last part is the real problem. A buffering spike and a
+blank ad slot on the same CDN node in the same fifteen minutes are not two
+incidents. They are one incident wearing two costumes, and no tool built to look
+at only one domain can ever say so.
+
+## What it does
+
+The Backlot is a studio operations command center: six specialist agents over
+**one shared ClickHouse database**, coordinated by an orchestrator whose job is
+correlation, not routing.
 
 - **chain_of_title** — forensic royalty reconciliation. Reads the raw contract
-  clause with Gemini, recomputes what the rights holder is actually owed
-  including tiered escalation, and shows the arithmetic behind any gap.
-- **ghost_ads** — silent server-side ad-insertion failures, quantified in
-  dollars rather than incident counts.
+  clause with Gemini, recomputes what is actually owed including tiered
+  escalation, and shows the arithmetic behind any gap.
+- **ghost_ads** — silent server-side ad-insertion failures, quantified in dollars
+  rather than incident counts.
 - **fraud_sentinel** — credential-sharing and bot rings, from device-fingerprint
-  fan-out corroborated by impossible travel and concurrency.
-- **premiere_pulse** — live playback health during an event, by CDN node and
-  time window against a baseline.
-- **performance_war_room** — title and territory performance for executives,
-  with sentiment brought in when the question is really "why".
+  fan-out corroborated by impossible travel and session concurrency.
+- **premiere_pulse** — live playback health by CDN node and time window, measured
+  against a baseline instead of an absolute threshold.
+- **performance_war_room** — title and territory performance, with sentiment
+  brought in when the question is really "why".
 - **churn_early_warning** — audience retention risk, caught while there is still
-  time to act.
+  time to act on it.
 
-Ask it what happened during a premiere and it consults the two specialists that
-matter, then reports one root cause: a degraded CDN node in Brazil that produced
-**both** a buffering spike and an ad-stitching failure in the same fifteen
-minutes. Two symptoms, one incident. No single agent could see that.
+Ask what happened during a premiere and it consults the two specialists that
+matter, then answers with one root cause: a degraded CDN node in Brazil that
+produced **both** a buffering spike and an ad-stitching failure inside the same
+window. Two symptoms, one incident.
 
-Every answer opens into an audit trail showing which specialists were consulted,
-what each was asked, and the exact SQL each one ran against ClickHouse.
+Ask a single-domain question and it consults one specialist. It routes; it does
+not fire at everything.
 
-### How we built it
+Every answer opens into an audit trail: which specialists were consulted, what
+each was asked, what each replied, and the exact SQL each ran against ClickHouse.
+Nothing about the answer has to be taken on trust.
+
+## How we built it
 
 - **Google Agent Development Kit (ADK)** — seven agents, wired with `AgentTool`
-  rather than `sub_agents`. This is the decision the product rests on; see the
-  learnings below.
+  rather than `sub_agents`. This is the decision the whole product rests on.
 - **Gemini 2.5 Pro and 2.5 Flash on Vertex AI** — Pro for the orchestrator's
-  cross-domain synthesis and for contract reasoning, Flash for the four
-  read-mostly operational agents. A deliberate cost and latency trade, not a
-  uniform default.
+  cross-domain synthesis and for contract reasoning; Flash for the four
+  read-mostly operational agents. A deliberate cost and latency trade rather than
+  a uniform default.
 - **ClickHouse Cloud**, queried at runtime by every agent through the official
   **`mcp-clickhouse` MCP server** over stdio. Seven day-partitioned MergeTree
   tables ordered by `(title_id, territory, event_time)` — the access pattern the
-  agents actually use.
+  agents actually use, not an afterthought.
 - **A custom Control Room console** (FastAPI + vanilla JS), not the ADK
   development UI, with a server-side trace plugin that captures every
-  specialist's tool calls and replies.
+  specialist's tool calls and replies so the audit trail can exist at all.
 - **Cloud Run** for the hosted deployment, with ClickHouse credentials in Secret
-  Manager.
+  Manager and Gemini reached through the runtime service account.
 
-### Data sources
+The dataset is synthetic and generated by this repository — around 1M playback
+events, 350k ad events and 1M fraud signals, plus contracts, a royalty ledger and
+sentiment. Four ground-truth anomalies are seeded into it and written to
+`ANOMALIES.json`, so every claim the agents make can be checked against what was
+actually planted.
 
-The dataset is **synthetic and generated by this repository** — no third-party
-or proprietary data is used. `data/generate_synthetic_data.py` produces ~1M
-playback events, ~350k ad events, ~1M fraud signals, plus contracts, a royalty
-ledger and sentiment, and seeds four ground-truth anomalies into them. The truth
-is written to `ANOMALIES.json` so any claim the agents make can be checked
-against what was actually planted.
+## Challenges we ran into
 
-Two properties are load-bearing and asserted by `clickhouse/verify_anomalies.py`
-(20 checks against the live database): every royalty figure is re-derivable from
-a ClickHouse aggregate, and the anomalies sit in a realistic background —
-households sharing devices, a VPN and travel baseline, honest payments carrying
-rounding drift — so detection is a discrimination problem rather than one
-equality filter against an empty haystack.
+**Correlation was structurally impossible, and it looked like a prompt problem.**
+Built with `sub_agents`, Control Room handed the conversation to `premiere_pulse`,
+which replied *"I do not have access to ad revenue data… you might need to consult
+another agent"* and ran no queries at all. In ADK, `sub_agents` means control
+*transfer* — the orchestrator never gets the floor back, so it can never hold two
+findings at once. No amount of instruction tuning fixes that. `AgentTool` returns
+the finding to the orchestrator, and the same question then produces one
+synthesized root-cause report.
 
-### What we learned
+**A full post-mortem reported "no royalty issues" while the ledger held a real
+$462.84 underpayment.** The audit trail showed Chain of Title had queried both
+numbers it needed. The orchestrator had simply sent the same generic sentence to
+all six specialists, and a request that vague gave it nothing to check against.
+Delegation has to speak each specialist's own language.
 
-1. **`sub_agents` versus `AgentTool` decides whether a multi-agent product is
-   possible at all.** With `sub_agents`, ADK *transfers control*: Control Room
-   handed the conversation to `premiere_pulse`, which answered "I do not have
-   access to ad revenue data… you might need to consult another agent" and ran
-   no queries. Correlation was not unreliable, it was structurally impossible.
-   `AgentTool` returns the finding to the orchestrator, and the same question
-   then produces one synthesized root-cause report.
-2. **Delegation has to speak each specialist's language.** A full post-mortem
-   sent the identical sentence to all six and reported "no royalty issues" while
-   the ledger held a real $462.84 underpayment. The trace showed Chain of Title
-   had queried both numbers it needed — a request that vague simply gave it
-   nothing to check against.
-3. **`GOOGLE_GENAI_USE_VERTEXAI=TRUE` is load-bearing.** Without it ADK builds
-   its client against the AI Studio backend and every agent fails with "No API
-   key was provided" — even with Vertex AI enabled, billing active and ADC
-   configured. The error names an API key and sends you looking in exactly the
-   wrong place.
-4. **Launch MCP servers via `sys.executable -m <module>`, not the console-script
-   name.** When the script directory is not on `PATH` the spawn fails, the
-   toolset silently loads **zero** tools, and the failure surfaces much later as
-   `Tool 'run_query' not found`.
-5. **Synthetic data has to be adversarial to itself.** Our first fraud dataset
-   gave every session a unique user and device, so the seeded ring was the only
-   fingerprint shared by more than one account. That is not detection.
-6. **A self-contradicting schema makes a correct agent look wrong.** A
-   per-minute contract whose escalation threshold was worded "after N *streams*"
-   led Chain of Title to compare minutes against a stream count and report a
-   genuinely underpaid contract as correctly paid. The reasoning was right; the
-   data was incoherent.
-7. **Evaluate restraint, not just recall.** Two of the five eval cases check
-   that the fleet does *not* invent a royalty discrepancy and does *not* find an
-   incident in a quiet title. An agent that always finds something is worse than
-   useless in operations, and no positive test catches that.
+**The MCP toolset silently loaded zero tools.** Launching the server by its
+console-script name only resolves when the virtualenv's script directory is on
+`PATH`. When it is not, the spawn fails quietly and the failure surfaces much
+later as `Tool 'run_query' not found`. Launching via `sys.executable -m <module>`
+always resolves.
 
-### What's next
+**Every agent failed with "No API key was provided"** — with Vertex AI enabled,
+billing active and ADC configured. ADK builds its client against the AI Studio
+backend unless `GOOGLE_GENAI_USE_VERTEXAI=TRUE` is set. The error names an API
+key, which sends you looking in exactly the wrong place.
 
-Streaming the trace as it happens rather than after the answer; alerting that
-runs the same specialists on a schedule instead of on a question; and a seventh
-agent for licensing and acquisition decisions, which fits the same shared data
-foundation.
+**Our first fraud dataset was a needle in an empty haystack.** Every session had a
+unique user and a unique device, so the seeded ring was the only fingerprint
+shared by more than one account. Detection was one equality filter. That is not
+detection.
+
+## Accomplishments that we're proud of
+
+**The correlation genuinely works, and it is visible.** Two specialists find two
+symptoms independently, and the orchestrator names one cause — with the shared
+node, territory and time window that prove it, and the SQL behind each number
+one click away.
+
+**Every royalty figure is re-derivable from the warehouse.** An earlier version
+billed per-minute contracts at an invented "~4 minutes per stream". That constant
+existed nowhere the agent could reach, so its arithmetic could never match the
+ledger and every such contract was a latent false positive. Now each rate type
+maps to one queryable aggregate — so when Chain of Title disagrees with the
+ledger, the disagreement is real.
+
+**The anomalies hide in a realistic crowd.** Households sharing devices, venue
+devices with high account fan-out and nothing else wrong, a VPN and travel
+baseline, honest payments carrying rounding drift. Detection is a discrimination
+problem, not a filter.
+
+**We test for restraint, not just recall.** Two of the five evaluation cases check
+that the fleet does *not* invent a royalty discrepancy and does *not* find an
+incident in a quiet title. An agent that always finds something is worse than
+useless in operations, and no positive test catches that.
+
+## What we learned
+
+That the interesting failures in a multi-agent system are architectural, not
+conversational. Three of the four hardest bugs — control transfer, generic
+delegation, the silent toolset — produced *plausible-looking output* rather than
+errors. A specialist politely saying "you might need to consult another agent"
+reads like a reasonable answer, and reports "no issues found" read like good
+news. Without a trace showing which agents ran and what SQL they issued, we would
+have shipped a system that looked like it worked.
+
+We also learned that synthetic data has to be adversarial to itself, and that a
+self-contradicting schema makes a correct agent look wrong: a per-minute contract
+whose escalation threshold was worded "after N *streams*" led Chain of Title to
+compare minutes against a stream count and report a genuinely underpaid contract
+as correctly paid. Its reasoning was right. The data was incoherent.
+
+## What's next for The Backlot
+
+Streaming the audit trail as it happens rather than after the answer. Running the
+same specialists on a schedule so findings arrive before somebody thinks to ask.
+And a seventh agent for licensing and acquisition decisions — which title to renew,
+which to let go — because it fits the same shared foundation without breaking it.
+```
 
 ---
 
-## Built with
+# 3 · Construido con  *(etiquetas)*
 
 ```
-google-adk, google-genai, gemini-2.5-pro, gemini-2.5-flash, vertex-ai,
-google-cloud-run, clickhouse, clickhouse-cloud, mcp, mcp-clickhouse,
-python, fastapi, secret-manager
+google-adk, gemini, gemini-2.5-pro, gemini-2.5-flash, vertex-ai, google-cloud,
+cloud-run, cloud-build, secret-manager, clickhouse, clickhouse-cloud, mcp,
+model-context-protocol, mcp-clickhouse, python, fastapi, uvicorn, javascript,
+sql, multi-agent, agentic-ai
 ```
 
-## Links
+# 4 · Enlaces para "Pruébalo"
 
-| Field | Value |
+| | |
 |---|---|
-| Hosted project URL | `https://the-backlot-203953305168.us-central1.run.app` |
-| Repository | `https://github.com/aaronperez212511-cloud/the-backlot` |
-| Demo video | *(paste the YouTube/Vimeo URL once uploaded — must be public, ≤3:00, English audio or English subtitles)* |
-| Partner track | **ClickHouse** |
+| Live demo | `https://the-backlot-203953305168.us-central1.run.app` |
+| GitHub | `https://github.com/aaronperez212511-cloud/the-backlot` |
 
-## Before hitting submit
+# 5 · Enlace a la demostración en vídeo
 
-- [ ] Repo flipped to **public**, MIT licence visible in the GitHub *About* panel
-- [ ] Hosted URL opened from a logged-out browser
+*(pendiente — YouTube/Vimeo, público, ≤3:00, inglés o subtítulos en inglés)*
+
+---
+
+# 6 · Información adicional  *(solo jueces)*
+
+| Campo | Respuesta |
+|---|---|
+| Tipo de remitente | **Individual** |
+| Nombre de la organización | `N/A` |
+| ¿Empleado del gobierno? | *(responde tú — presumo **No**)* |
+| País de residencia | **Mexico** |
+| Provincia de Canadá | `N/A` |
+| ¿Proyecto nuevo o preexistente? | **New** — primer commit 24 ago 2026, dentro del periodo |
+| Programa de socios | **ClickHouse** |
+| Personas en el equipo | **1** |
+| URL repositorio open source | `https://github.com/aaronperez212511-cloud/the-backlot` |
+| URL proyecto alojado | `https://the-backlot-203953305168.us-central1.run.app` |
+
+## ¿Qué productos de Google Cloud utilizaste?
+
+```
+Vertex AI — Gemini 2.5 Pro and Gemini 2.5 Flash, called at runtime by every
+agent through the google-genai SDK.
+
+Agent Development Kit (google-adk) — all seven agents, the AgentTool
+orchestration between them, and the rubric evaluation harness.
+
+Cloud Run — hosts the Control Room console and the ADK API server.
+
+Cloud Build — builds the container image from the repository Dockerfile.
+
+Secret Manager — stores the ClickHouse Cloud credentials, mounted into the
+Cloud Run service at deploy time.
+
+Container Registry (gcr.io) — stores the built image.
+
+IAM — a dedicated runtime service account with aiplatform.user and
+secretmanager.secretAccessor.
+```
+
+## Enumere todas las demás herramientas o productos
+
+```
+ClickHouse Cloud — the shared data foundation. Seven day-partitioned MergeTree
+tables; every agent queries it at runtime.
+
+mcp-clickhouse — ClickHouse's official Model Context Protocol server, run as a
+stdio subprocess. This is how the agents reach the database; it is not
+referenced only in the README.
+
+Model Context Protocol (MCP) — the transport between the agents and ClickHouse.
+
+Python 3.13, FastAPI, Uvicorn — the Control Room console and its API.
+
+pandas, NumPy, clickhouse-connect — synthetic data generation and loading.
+
+Pillow — generation of the brand assets and the architecture diagram.
+
+Pinyon Script and Caveat (SIL Open Font License 1.1) — typography, vendored
+with their licences.
+```
+
+## ¿Primera vez que utilizas...?
+
+Answer each honestly from your own history. One factual note so you are not
+guessing: **you used ClickHouse for the first time in a previous project a few
+weeks ago**, so for ClickHouse the truthful answer is *no*. IBM, Grafana,
+Parallel and Replit are yours to answer — we used none of them here.
+
+---
+
+# 7 · Antes de enviar
+
+- [ ] Repo **público**, licencia MIT visible en el panel *About* de GitHub
+- [ ] URL alojada abierta desde un navegador sin sesión
 - [ ] `python clickhouse/verify_anomalies.py` → 20/20
-- [ ] Video public and playable from an incognito window
-- [ ] Deadline: **9 Sep 2026, 2:00 PM PT** = 21:00 UTC = **3:00 PM Mexico City**
+- [ ] Vídeo público y reproducible en incógnito
+- [ ] Casilla de Términos y Condiciones marcada
+- [ ] **Cierre: 9 sep 2026, 2:00 PM PT = 21:00 UTC = 3:00 PM Ciudad de México**
