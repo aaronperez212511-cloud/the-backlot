@@ -272,11 +272,16 @@ at 3840px wide, so they hold up when a judge opens one full screen.
 |---|---|---|
 | 1 | `design/gallery-1-identity.png` | The fleet at a glance — six specialists, one command center |
 | 2 | `design/the-backlot-flow.png` | How one investigation runs, step by step, ending in a real correlated result |
-| 3 | `design/the-backlot-architecture.png` | The system, with the two-way AgentTool arrows that make correlation possible |
-| 4 | `design/aurum-reflex-plate-vi.png` | The identity plate |
+| 3 | `design/the-backlot-fleet-plate.png` | Every agent named at full size, with its model and the tables it reads |
+| 4 | `design/the-backlot-architecture.png` | The system, with the two-way AgentTool arrows that make correlation possible |
+| 5 | `design/aurum-reflex-plate-vi.png` | The identity plate |
 
 Lead with identity, then the walkthrough. A judge who opens only the first two
 images should already understand what the system does and that it runs itself.
+
+Nothing in the set is numbered 01–06. The six agents are peers, not a
+sequence, and numbering them tells a judge the one thing about the fleet that
+carries no meaning — so the name is the identifier everywhere it appears.
 
 # 5 · Enlace a la demostración en vídeo
 

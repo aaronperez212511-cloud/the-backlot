@@ -51,8 +51,12 @@ DIM = (104, 98, 86)         # clinical annotation
 FAINT = (60, 57, 51)
 WHITE = (255, 255, 255)     # the one label that must read at a glance: agent names
 
-AGENTS = [("C", "CHAIN OF TITLE"), ("G", "GHOST ADS"), ("F", "FRAUD SENTINEL"),
-          ("P", "PREMIERE PULSE"), ("W", "WAR ROOM"), ("E", "EARLY WARNING")]
+AGENTS = [("C", "CHAIN OF TITLE", "royalty integrity"),
+          ("G", "GHOST ADS", "ad-insertion leaks"),
+          ("F", "FRAUD SENTINEL", "credential abuse"),
+          ("P", "PREMIERE PULSE", "playback health"),
+          ("W", "WAR ROOM", "title performance"),
+          ("E", "EARLY WARNING", "retention risk")]
 
 BLADE = [(50.70, 30.01), (66.96, 39.40), (94.56, 43.74), (69.73, 9.55)]
 BLADE_R, BLADE_A = 28.16, -43.3      # polar centroid of blade 0
@@ -387,7 +391,7 @@ def main() -> None:
         bevel(cv, k, hx, hy, hero)
 
     # six initials, ultra-bright chrome, seated on their own blades
-    for k, (ch_, _) in enumerate(AGENTS):
+    for k, (ch_, _, _role) in enumerate(AGENTS):
         gx, gy = blade_centre(k)
         lm = letter_mask(ch_, int(hero * 0.145), PINYON, turn=k * 60)
         full = Image.new("L", (cw, ch), 0)
@@ -421,7 +425,7 @@ def main() -> None:
 
     cell = CW / 6
     sm = int(cell * 0.76)
-    for k, (ch_, name) in enumerate(AGENTS):
+    for k, (ch_, name, role) in enumerate(AGENTS):
         cx = M + cell * (k + 0.5)
         sx, sy = int(cx - sm / 2), S(2128)
         base = Image.new("L", (cw, ch), 0)
@@ -444,10 +448,13 @@ def main() -> None:
         plate_metal(cv, full, CHROME)
 
         d.line([(cx, sy + sm + S(34)), (cx, sy + sm + S(54))], fill=HAIR, width=max(SS, 1))
-        tracked(d, (cx, sy + sm + S(96)), f"{k + 1:02d}", mono(19), DIM, S(5), anchor="ms")
-        # This was set in FAINT — almost the ink colour itself, effectively
-        # invisible against the ground. Bold, white, and a size step up.
-        tracked(d, (cx, sy + sm + S(148)), name, monob(19), WHITE, S(3), anchor="ms")
+        # The name takes the slot the specimen number used to hold. A plate
+        # numbering its own specimens 01–06 is telling you their order, which
+        # is the one thing about this fleet that carries no meaning: the
+        # agents are peers, not a sequence. The name is the identifier, so it
+        # gets the position and the weight, with the domain under it.
+        tracked(d, (cx, sy + sm + S(102)), name, monob(19), WHITE, S(3), anchor="ms")
+        tracked(d, (cx, sy + sm + S(146)), role, mono(15), DIM, S(3), anchor="ms")
 
     # ── footer ──────────────────────────────────────────────────────────────
     rule(2648)
