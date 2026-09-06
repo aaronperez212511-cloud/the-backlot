@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from render_plate import (GOLD, INK, aperture_mask, blade_centre, font,
+from render_plate import (GOLD, INK, aperture_mask, bevel, blade_centre, font,
                           letter_mask, plate_metal, tracked, PINYON)
 
 HERE = Path(__file__).parent
@@ -57,7 +57,9 @@ def identity_card(out: Path) -> None:
     ax, ay = CX - ap // 2, S(230)
     m = Image.new("L", (cw, ch), 0)
     m.paste(aperture_mask(ap), (ax, ay))
-    plate_metal(cv, m, GOLD)
+    plate_metal(cv, m, GOLD, brush=(CX, ay + ap / 2), strength=15, n_bands=1000)
+    for k in range(6):
+        bevel(cv, k, ax, ay, ap)
 
     # wordmark
     f = ital(150)
@@ -82,7 +84,8 @@ def identity_card(out: Path) -> None:
         cv.alpha_composite(lay)
         lit = Image.new("L", (cw, ch), 0)
         lit.paste(aperture_mask(sm, only=k), (x, y))
-        plate_metal(cv, lit, GOLD)
+        plate_metal(cv, lit, GOLD, brush=(x + sm / 2, y + sm / 2), strength=12, n_bands=500)
+        bevel(cv, k, x, y, sm)
         # Centred in the opening, not on the blade — see the note in
         # render_architecture.mark() for why.
         lm = letter_mask(ch_, int(sm * 0.30), PINYON, widen=1.0)

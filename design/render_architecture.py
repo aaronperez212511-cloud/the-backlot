@@ -14,8 +14,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
 
-from render_plate import (CHROME, GOLD, INK, aperture_mask, blade_centre, font,
-                          letter_mask, plate_metal, tracked, PINYON)
+from render_plate import (CHROME, GOLD, INK, aperture_mask, bevel, blade_centre,
+                          font, letter_mask, plate_metal, tracked, PINYON)
 
 HERE = Path(__file__).parent
 W, H, SS = 2400, 1600, 3        # design units; exported at OUT_W
@@ -60,7 +60,8 @@ def mark(cv, x, y, size, k):
     cv.alpha_composite(layer)
     lit = Image.new("L", cv.size, 0)
     lit.paste(aperture_mask(size, only=k), (x, y))
-    plate_metal(cv, lit, GOLD)
+    plate_metal(cv, lit, GOLD, brush=(x + size / 2, y + size / 2), strength=12, n_bands=500)
+    bevel(cv, k, x, y, size)
     # Centred in the opening, not on the blade — the opening is a near-black
     # hole, and a bright letter has real contrast against it on its own.
     # This letter was previously filled with a near-black ramp (a debossed,
@@ -128,7 +129,9 @@ def main(style: str = "bright") -> None:
     apx, apy = CX - ap // 2, S(424)
     full = Image.new("L", (cw, chh), 0)
     full.paste(aperture_mask(ap), (apx, apy))
-    plate_metal(cv, full, GOLD)
+    plate_metal(cv, full, GOLD, brush=(CX, apy + ap / 2), strength=14, n_bands=800)
+    for k in range(6):
+        bevel(cv, k, apx, apy, ap)
     tracked(d, (CX, apy + ap + S(56)), "CONTROL ROOM", mono(26), CHROME_TXT, S(10), anchor="ms")
     tracked(d, (CX, apy + ap + S(92)), "gemini-2.5-pro  ·  routes, correlates, synthesises",
             mono(18), DIM, S(3), anchor="ms")

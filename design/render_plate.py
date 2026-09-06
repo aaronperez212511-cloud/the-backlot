@@ -15,6 +15,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = Path(__file__).parent
@@ -77,18 +78,31 @@ def ramp(h: int, stops) -> Image.Image:
     return strip
 
 
-def plate_metal(canvas: Image.Image, mask: Image.Image, stops, box=None) -> None:
+def plate_metal(canvas: Image.Image, mask: Image.Image, stops, box=None,
+                 brush=None, strength=15, n_bands=1100) -> None:
     """Show a metal ramp through `mask`. The ramp spans `box` (default: the
-    mask's own bounds), so one light can be shared across separate shapes."""
+    mask's own bounds), so one light can be shared across separate shapes.
+
+    `brush=(cx, cy)` runs the fill through `brushed()` before compositing, in
+    the local (bbox-sized) frame rather than the full canvas — a photographed
+    lens iris shows machined streaks radiating from its own centre; without
+    this the metal reads as flat paint no matter how carefully the ramp is lit.
+    """
     bb = box or mask.getbbox()
     if not bb:
         return
     x0, y0, x1, y1 = bb
     strip = ramp(y1 - y0, stops).resize((x1 - x0, y1 - y0))
+    # Built at bbox size, not canvas size — brushed() runs a numpy pass over
+    # every pixel it's given, and the plate's canvas is supersampled to ~5800px
+    # tall, so doing that pass at full-canvas size for a 150px mark is wasted
+    # work several times over.
+    local = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
+    local.paste(strip, (0, 0), mask.crop(bb))
+    if brush is not None:
+        local = brushed(local, brush[0] - x0, brush[1] - y0, strength=strength, n_bands=n_bands)
     layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
-    # The strip is bb-sized, so the mask has to be cropped to bb to match it —
-    # pasting a full-canvas mask against a cropped source is a size mismatch.
-    layer.paste(strip, (x0, y0), mask.crop(bb))
+    layer.paste(local, (x0, y0), local)
     canvas.alpha_composite(layer)
 
 
@@ -185,73 +199,141 @@ def tracked_mask(size, xy, text, fnt, track, anchor="ls") -> Image.Image:
     return m
 
 
-def curtain(canvas: Image.Image, x0: int, y0: int, w: int, h: int) -> None:
-    """The proscenium: a valance whose hem scallops in true curves, tassels at
-    the dips, and a drape tied back down each side."""
-    sx, sy = w / 200.0, h / 60.0
-    P = lambda pt: (x0 + pt[0] * sx, y0 + pt[1] * sy)
+def paper_ground(size: tuple[int, int], base=INK, grain=6, seed=11) -> Image.Image:
+    """Flat ink with fine per-pixel grain — paper, not a flat digital fill."""
+    w, h = size
+    rng = np.random.default_rng(seed)
+    noise = rng.integers(-grain, grain + 1, size=(h, w)).astype(np.int16)
+    arr = np.zeros((h, w, 3), dtype=np.int16) + np.array(base, dtype=np.int16)
+    arr += noise[..., None]
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
 
-    # Drape silhouettes, curved.
-    def drape_pts(mirror):
-        f = lambda v: (200 - v) if mirror else v
-        pts = [(f(0), 0), (f(34), 0)]
-        pts += [(f(x), y) for x, y in bez((34, 0), (34, 14), (26, 22), (20, 34))]
-        pts += [(f(x), y) for x, y in bez((20, 34), (16, 44), (15, 52), (15, 60))]
-        pts += [(f(0), 60)]
-        return [P(q) for q in pts]
 
-    m = Image.new("L", canvas.size, 0)
-    d = ImageDraw.Draw(m)
-    for mirror in (False, True):
-        d.polygon(drape_pts(mirror), fill=255)
+def etched_rings(canvas: Image.Image, cx: float, cy: float, step=46, colour=(17, 17, 20)) -> None:
+    """Concentric hairlines behind everything, at a contrast so low they only
+    read at a glance — the etched-paper/vinyl-record specimen-plate texture."""
+    d = ImageDraw.Draw(canvas)
+    diag = int((canvas.width ** 2 + canvas.height ** 2) ** 0.5)
+    for r in range(step, diag, step):
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=colour, width=1)
 
-    # Valance: straight top, curved scalloped hem returning right to left.
-    # Four scallops of exactly 50 across 200. A period that does not divide the
-    # span leaves the last one overshooting past the edge, and the polygon then
-    # closes across that overshoot as a spike out the side.
-    hem = [(200, 10)]
-    for i in range(4):
-        x = 200 - i * 50
-        hem += bez((x, 10), (x - 11, 10), (x - 14, 20), (x - 25, 20))
-        hem += bez((x - 25, 20), (x - 36, 20), (x - 39, 10), (x - 50, 10))
-    pts = [P((0, 0)), P((200, 0))] + [P(q) for q in hem] + [P((0, 10))]
-    d.polygon(pts, fill=255)
-    plate_metal(canvas, m, GOLD)
 
-    # Folds: fine ink lines, clipped to the cloth so none escape the silhouette.
-    fold = Image.new("L", canvas.size, 0)
-    fd = ImageDraw.Draw(fold)
-    lw = max(int(1.1 * sx), 1)
-    inner = [(34, 0), (34, 14), (26, 22), (20, 34), (16, 44), (15, 52), (15, 60)]
-    for mirror in (False, True):
-        f = lambda v: (200 - v) if mirror else v
-        for i in range(1, 11):
-            t = i / 11
-            cur = [(f(x * t), y) for x, y in
-                   bez((34, 0), (34, 14), (26, 22), (20, 34)) +
-                   bez((20, 34), (16, 44), (15, 52), (15, 60))]
-            fd.line([P(q) for q in cur], fill=62, width=lw, joint="curve")
-    for i in range(1, 27):
-        x = 200 * i / 27
-        fd.line([P((x, 0)), P((x + (2.5 if i % 4 < 2 else -2.5), 16))], fill=44, width=lw)
-    fold = Image.composite(fold, Image.new("L", canvas.size, 0), m)
-    ink = Image.new("RGBA", canvas.size, INK + (0,))
-    ink.putalpha(fold)
-    canvas.alpha_composite(ink)
+def brushed(img_rgba: Image.Image, cx: float, cy: float, strength=15, n_bands=1100, seed=3) -> Image.Image:
+    """Radial brushed-metal streaks, spoking out from `(cx, cy)` — the finish a
+    machined ring actually has, not a generic linear grain. `(cx, cy)` is in
+    `img_rgba`'s own coordinate frame, which is normally a local bbox crop, not
+    the full canvas — see the note on `plate_metal`. Placing the centre far
+    outside the image (a pediment bar's brush point sits thousands of px below
+    it) makes the angle barely change across the shape's own height, which is
+    what turns this radial technique into near-vertical brushing for a flat bar
+    instead of the sunburst it gives a lens iris. Applied only where alpha>0,
+    so it never leaks past the shape's own silhouette."""
+    arr = np.array(img_rgba).astype(np.int16)
+    h, w = arr.shape[:2]
+    yy, xx = np.mgrid[0:h, 0:w]
+    theta = np.arctan2(yy - cy, xx - cx)
+    band = ((theta + np.pi) / (2 * np.pi) * n_bands).astype(np.int64) % n_bands
+    rng = np.random.default_rng(seed)
+    band_vals = rng.integers(-strength, strength + 1, size=n_bands)
+    noise = band_vals[band]
+    has_alpha = arr[..., 3] > 0
+    for c in range(3):
+        arr[..., c] = np.where(has_alpha, np.clip(arr[..., c] + noise, 0, 255), arr[..., c])
+    return Image.fromarray(arr.astype(np.uint8), "RGBA")
 
-    # Tassels hang from the scallop dips, so hem and trim agree.
-    t = Image.new("L", canvas.size, 0)
-    td = ImageDraw.Draw(t)
-    for cx in (175, 125, 75, 25):
-        td.ellipse([P((cx - 2.4, 19.4)), P((cx + 2.4, 24.2))], fill=255)
-        td.polygon([P((cx - 1.9, 22.6)), P((cx + 1.9, 22.6)),
-                    P((cx + 1.0, 30)), P((cx - 1.0, 30))], fill=255)
-    plate_metal(canvas, t, GOLD)
+
+def bevel(canvas: Image.Image, k: int, x: float, y: float, size: float) -> None:
+    """A highlight along the blade edge that would face a light from upper-left,
+    a shadow along the edge that would face away from it — the two strokes that
+    make a flat fill read as a bevel instead of a sticker."""
+    poly = [rot(p, k * 60) for p in BLADE]
+    pts = [(x + px / 100 * size, y + py / 100 * size) for px, py in poly]
+    n = len(pts)
+    hi = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    hd = ImageDraw.Draw(hi)
+    for i in range(n):
+        p0, p1 = pts[i], pts[(i + 1) % n]
+        mx, my = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+        facing = (mx - (x + size / 2)) + (my - (y + size / 2))
+        if facing < 0:
+            hd.line([p0, p1], fill=(255, 246, 214, 130), width=max(int(size * 0.008), 1))
+        else:
+            hd.line([p0, p1], fill=(20, 14, 4, 150), width=max(int(size * 0.01), 1))
+    hi = hi.filter(ImageFilter.GaussianBlur(max(size * 0.004, 1)))
+    canvas.alpha_composite(hi)
+
+
+def blueprint(canvas: Image.Image, cx: float, cy: float, r: float, colour=(58, 50, 30)) -> None:
+    """A hint of a studio backlot floor plan, sitting where the aperture's own
+    opening will later show it through — a soundstage, a production office, a
+    lot road. Legible as *a plan* at a glance; it doesn't have to be literal."""
+    d = ImageDraw.Draw(canvas)
+    x0, y0 = cx - r, cy - r
+    lw = max(int(r * 0.02), 1)
+
+    def rect(fx0, fy0, fx1, fy1):
+        d.rectangle([x0 + fx0 * 2 * r, y0 + fy0 * 2 * r, x0 + fx1 * 2 * r, y0 + fy1 * 2 * r],
+                    outline=colour, width=lw)
+
+    rect(0.14, 0.16, 0.52, 0.46)
+    rect(0.56, 0.14, 0.86, 0.34)
+    rect(0.20, 0.54, 0.44, 0.82)
+    d.line([x0 + 0.48 * 2 * r, y0 + 0.46 * 2 * r, x0 + 0.48 * 2 * r, y0 + 0.90 * 2 * r], fill=colour, width=lw)
+    d.line([x0 + 0.10 * 2 * r, y0 + 0.50 * 2 * r, x0 + 0.90 * 2 * r, y0 + 0.50 * 2 * r], fill=colour, width=max(lw // 2, 1))
+    d.ellipse([x0 + 0.58 * 2 * r, y0 + 0.58 * 2 * r, x0 + 0.82 * 2 * r, y0 + 0.82 * 2 * r], outline=colour, width=lw)
+
+
+def drop_shadow(canvas: Image.Image, mask: Image.Image, dx=8, dy=14, blur=6, opacity=210) -> None:
+    """A soft, offset dark pass under a shape — the one cue that most separates
+    a photographed object sitting on paper from a flat vector cutout."""
+    shifted = Image.new("L", canvas.size, 0)
+    shifted.paste(mask, (dx, dy))
+    shifted = shifted.filter(ImageFilter.GaussianBlur(blur))
+    black = Image.new("RGBA", canvas.size, (0, 0, 0, opacity))
+    canvas.alpha_composite(Image.composite(black, Image.new("RGBA", canvas.size, (0, 0, 0, 0)), shifted))
+
+
+def pediment(canvas: Image.Image, x0: int, y0: int, w: int, h: int) -> None:
+    """A fluted brass pediment over CONTROL ROOM — three rounded arches on a
+    brushed bar, replacing the fabric curtain so the material reads as forged
+    metal rather than cloth. Reuses the earlier valance's bezier-scallop
+    technique (real curves, not a sawtooth) at three-fold symmetry to match the
+    reference's triple-arch silhouette, in place of a first attempt that spaced
+    the arches with straight polygon notches and read as a jagged crown rather
+    than an elegant bracket."""
+    P = lambda pt: (x0 + pt[0] / 200.0 * w, y0 + pt[1] / 60.0 * h)
+    period = 200 / 3
+    hem = [(200, 8)]
+    for i in range(3):
+        x = 200 - i * period
+        hem += bez((x, 8), (x - period * 0.20, 8), (x - period * 0.26, 38), (x - period * 0.50, 38))
+        hem += bez((x - period * 0.50, 38), (x - period * 0.74, 38), (x - period * 0.80, 8), (x - period, 8))
+    pts = [P(q) for q in hem]
+    sil = Image.new("L", canvas.size, 0)
+    ImageDraw.Draw(sil).polygon([P((0, 0)), P((200, 0))] + pts + [P((0, 8))], fill=255)
+
+    drop_shadow(canvas, sil, dx=int(w * 0.010), dy=int(h * 0.09), blur=max(int(h * 0.05), 1))
+    bb = (x0, y0, x0 + w, y0 + h)
+    # A brush centre many multiples of h below the bar keeps the local angle
+    # nearly constant across its small height — the same radial technique the
+    # aperture uses reads as near-vertical brushing on a shape this flat.
+    plate_metal(canvas, sil, GOLD, box=bb, brush=(x0 + w / 2, y0 + h * 24), strength=14, n_bands=900)
+
+    hi = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    hd = ImageDraw.Draw(hi)
+    lw = max(int(h * 0.02), 1)
+    hd.line([P((0, 0)), P((200, 0))], fill=(255, 246, 214, 150), width=lw)
+    for i in range(len(pts) - 1):
+        p0, p1 = pts[i], pts[i + 1]
+        col = (255, 246, 214, 120) if p0[1] < y0 + h * 0.35 else (20, 14, 4, 140)
+        hd.line([p0, p1], fill=col, width=lw)
+    hi = hi.filter(ImageFilter.GaussianBlur(max(h * 0.006, 1)))
+    canvas.alpha_composite(hi)
 
 
 def main() -> None:
     cw, ch = W * SS, H * SS
-    cv = Image.new("RGBA", (cw, ch), INK + (255,))
+    cv = paper_ground((cw, ch), grain=5)
     d = ImageDraw.Draw(cv)
     S = lambda v: int(v * SS)
 
@@ -266,6 +348,13 @@ def main() -> None:
     def rule(y, x0=None, x1=None, col=HAIR):
         d.line([(x0 or M, S(y)), (x1 or cw - M, S(y))], fill=col, width=max(SS, 1))
 
+    # Etched behind everything, centred on the hero specimen — the geometry is
+    # computed once here since the hero block below needs it too.
+    hero = S(860)
+    hx, hy = CX - hero // 2, S(320)
+    hero_cx, hero_cy = CX, hy + hero // 2
+    etched_rings(cv, hero_cx, hero_cy, step=S(36))
+
     # ── header ──────────────────────────────────────────────────────────────
     tracked(d, (M, S(196)), "PLATE VI", mono(21), DIM, S(7))
     t = "ATLAS OF REFLECTIVE FORMS"
@@ -275,9 +364,6 @@ def main() -> None:
     rule(232)
 
     # ── hero specimen ───────────────────────────────────────────────────────
-    hero = S(860)
-    hx, hy = CX - hero // 2, S(320)
-
     # measurement ring: 72 ticks at 5-degree intervals, longer every 30
     for i in range(72):
         a = math.radians(i * 5 - 90)
@@ -294,7 +380,11 @@ def main() -> None:
 
     ap = Image.new("L", (cw, ch), 0)
     ap.paste(aperture_mask(hero), (hx, hy))
-    plate_metal(cv, ap, GOLD)
+    drop_shadow(cv, ap, dx=S(10), dy=S(16), blur=S(8))
+    blueprint(cv, hero_cx, hero_cy, hero * 0.20)
+    plate_metal(cv, ap, GOLD, brush=(hero_cx, hero_cy), strength=16, n_bands=1300)
+    for k in range(6):
+        bevel(cv, k, hx, hy, hero)
 
     # six initials, ultra-bright chrome, seated on their own blades
     for k, (ch_, _) in enumerate(AGENTS):
@@ -310,14 +400,16 @@ def main() -> None:
     # ── wordmark ────────────────────────────────────────────────────────────
     f = ital(168)
     m = tracked_mask((cw, ch), (CX, S(1470)), "THE BACKLOT", f, S(26), anchor="ms")
+    drop_shadow(cv, m, dx=S(4), dy=S(8), blur=S(5))
     plate_metal(cv, m, GOLD)
 
-    # ── control room, under its curtain ─────────────────────────────────────
+    # ── control room, under its pediment ────────────────────────────────────
     cur_w, cur_h = S(1080), S(300)
     cur_x, cur_y = CX - cur_w // 2, S(1600)
-    curtain(cv, cur_x, cur_y, cur_w, cur_h)
+    pediment(cv, cur_x, cur_y, cur_w, cur_h)
     f2 = ital(74)
-    m = tracked_mask((cw, ch), (CX, cur_y + S(228)), "CONTROL ROOM", f2, S(30), anchor="ms")
+    m = tracked_mask((cw, ch), (CX, cur_y + S(260)), "CONTROL ROOM", f2, S(30), anchor="ms")
+    drop_shadow(cv, m, dx=S(3), dy=S(6), blur=S(4))
     plate_metal(cv, m, GOLD)
 
     rule(1990)
@@ -340,7 +432,8 @@ def main() -> None:
 
         lit = Image.new("L", (cw, ch), 0)
         lit.paste(aperture_mask(sm, only=k), (sx, sy))
-        plate_metal(cv, lit, GOLD)
+        plate_metal(cv, lit, GOLD, brush=(sx + sm / 2, sy + sm / 2), strength=12, n_bands=500)
+        bevel(cv, k, sx, sy, sm)
 
         # Centred in the opening, not on the blade — see the note in
         # render_architecture.mark() for why.
