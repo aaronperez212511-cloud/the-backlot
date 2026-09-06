@@ -44,10 +44,16 @@ The rules ask for this explicitly. The most substantive ones, all discovered by 
 
 ## Before you submit
 
-- [ ] Flip the GitHub repo to **public** and confirm the MIT license shows in the "About" panel
-- [ ] Deploy and smoke-test the hosted URL from a logged-out browser
-- [ ] `./deploy/schedule.sh` — put the Watchtower on its clock, then `gcloud scheduler jobs run backlot-watchtower ...` once and confirm findings appear at `/api/watch/findings`. The panel being populated is half the cold open and the whole 1:58 beat of the video
-- [ ] Apply the schema on the deployed instance's database (`watch_findings` is new — `python clickhouse/apply_schema.py`)
+- [ ] Flip the GitHub repo to **public** and confirm the MIT license shows in the "About" panel. Leave real margin before 15:00 CST — GitHub's licence detection is not instant
+- [x] Deploy and smoke-test the hosted URL from a logged-out browser — revision `the-backlot-00021-thd`, `/api/health` green
+- [x] `./deploy/schedule.sh` — Cloud Scheduler job `backlot-watchtower` is ENABLED and firing hourly. Verified end to end: a scheduler-triggered sweep correlated a CDN failure on `us-west-2a` across playback and ad insertion with no human in the loop
+- [x] Apply the schema on the deployed instance's database — `watch_findings` exists and is accumulating; the deployed service and local `.env` point at the same ClickHouse instance
 - [ ] Re-run `verify_anomalies.py` against whatever data the deployed instance points at
 - [ ] Record, caption and publish the video
-- [ ] Decide what to do about the `Co-Authored-By` trailer on the initial commit (see repo history) — the rules bar non-Google **AI tooling in the project**, which is about the runtime stack rather than the editor, but the trailer is a gratuitous flag in a repo that gets automated first-round screening
+- [ ] Decide what to do about the `Co-Authored-By` trailer — it is on **27 commits**, not just the initial one, so this is a decision about rewriting the whole history rather than amending one commit. The rules bar non-Google **AI tooling in the project**, which is about the runtime stack rather than the editor, but the trailer is a gratuitous flag in a repo that gets automated first-round screening
+
+## Landmine found on the way to deploying, worth keeping
+
+`google-adk`'s MCP support sits behind a bare `try: ... except ImportError` that only logs at DEBUG. When `mcp-clickhouse<1` resolved to 0.6.0 — pulling `fastmcp` 4.x and `mcp` 2.x, which ADK 2.7.1 is not built against — the import chain broke, `__all__` was left empty, and the visible error was `cannot import name 'McpToolset'`, accusing the one package that was innocent. Cloud Build went green; the revision never listened on its port.
+
+Nothing in the repo had changed. A rebuild on any day after those releases would have done it, including a rebuild on submission day. `requirements-runtime.txt` now caps that whole chain at the versions actually verified.

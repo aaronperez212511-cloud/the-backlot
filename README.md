@@ -83,6 +83,8 @@ curl localhost:8080/api/watch/findings
 
 Cloud Scheduler rather than a loop inside the container is deliberate: Cloud Run freezes an idle instance's CPU and scales to zero, so an in-process scheduler stops running under exactly the conditions an unattended watch exists to cover.
 
+`design/the-backlot-flow.png` walks one investigation end to end — the two ways in, the sequenced delegation, and the correlated result — with real output from an unattended run rather than a mock-up.
+
 ## The seeded incident (for the demo)
 
 `data/generate_synthetic_data.py` seeds four ground-truth anomalies into the dataset — including one CDN edge node (`sa-east-1b`, Brazil) that degrades for 15 minutes during the *Midnight Marquee* premiere, causing **both** a viewer-buffering spike (`premiere_pulse`'s finding) **and** an ad-stitching failure (`ghost_ads`'s finding) at the same place and time. Two specialists find two symptoms independently; `control_room` is what ties them to one root cause.
@@ -125,6 +127,8 @@ common/watchtower.py           — standing briefs the fleet runs on a schedule,
 common/trace_plugin.py         — captures every specialist's tool calls so the trail can be shown
 deploy/deploy.sh               — build + deploy to Cloud Run
 deploy/schedule.sh             — Cloud Scheduler job that triggers unattended sweeps
+design/render_architecture.py  — the system diagram: what this is built from
+design/render_flow.py          — the sequence diagram: what happens, in what order
 clickhouse/schema.sql          — the shared data model
 clickhouse/apply_schema.py     — applies the schema to ClickHouse Cloud
 clickhouse/load_data.py        — loads generated CSVs into ClickHouse Cloud
