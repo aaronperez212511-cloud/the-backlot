@@ -1,16 +1,45 @@
 # What the SERVED app actually needs. The image ships only common/, agents/,
 # orchestrator/, web/ and server.py — the data generation and loading scripts
-# stay out, and so do pandas/numpy/clickhouse-connect, which only they use.
-# (clickhouse-connect still arrives transitively via mcp-clickhouse, which runs
-# as the agents' MCP subprocess inside the container.)
+# stay out, and so do pandas and numpy, which only they use.
 #
 # Floors are the versions this was actually built and verified against; ceilings
 # are the next major. Do NOT exact-pin: an over-constrained file makes pip's
 # resolver backtrack for minutes and it can settle on a broken placeholder
 # release of google-adk instead of failing cleanly.
-google-adk>=2.7,<3
+#
+# google-adk is the exception, capped at the MINOR. 2.8.0 was published during
+# the build window and dropped the `McpToolset` alias that
+# common/clickhouse_toolset.py imports (2.8 keeps only `MCPToolset`). With a
+# `<3` ceiling the image silently picked it up, and the container died on
+# import with `cannot import name 'McpToolset'` — a green Cloud Build followed
+# by a revision that never listens on the port. The whole fleet is verified
+# against 2.7.1; moving to 2.8 is a deliberate upgrade with its own test pass,
+# not something a rebuild should do on its own the week of a deadline.
+google-adk>=2.7,<2.8
 google-genai>=2.19,<3
-mcp-clickhouse>=0.4,<1
+# Capped at the MINOR, and the two packages underneath it are pinned too,
+# because this trio is a silent-failure trap.
+#
+# ADK's MCP support lives behind `try: ... except ImportError` in
+# google/adk/tools/mcp_tool/__init__.py, and the handler only logs at DEBUG.
+# When anything in that import chain breaks, `__all__` stays EMPTY — so the
+# symptom is not a stack trace from the incompatible package, it is
+# `cannot import name 'McpToolset'`, pointing at ADK, which is innocent.
+#
+# What actually happened: `mcp-clickhouse<1` resolved to 0.6.0 (verified here:
+# 0.4.1), which pulls fastmcp 4.x, which pulls mcp 2.x. ADK 2.7.1 is built
+# against mcp 1.x. Cloud Build went green, the image was fine, and the Cloud
+# Run revision died on import every time. Nothing in the repo had changed —
+# a rebuild on any day after those releases would have done it.
+mcp-clickhouse>=0.4,<0.5
+mcp>=1.29,<2
+fastmcp>=2.14,<3
 python-dotenv>=1.2,<2
 fastapi>=0.141,<1
 uvicorn>=0.52,<1
+# Declared explicitly even though mcp-clickhouse pulls it in transitively:
+# common/watchtower.py imports it directly, to write findings and read them back
+# (the MCP `run_query` tool is a read path, and the agents' path, not this one).
+# server.py imports watchtower at module scope, so if that transitive edge ever
+# disappears the container stops booting at all rather than degrading quietly.
+clickhouse-connect>=1.7,<2

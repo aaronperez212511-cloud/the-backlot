@@ -36,9 +36,12 @@ equally, so none of them is padding.
 
 ---
 
-## 0:00–0:18 — Cold open  *(Potential impact)*
+## 0:00–0:20 — Cold open  *(Potential impact)*
 
-Screen: the Control Room console, empty, six specialists idle in the sidebar.
+Screen: the Control Room console on load. Six specialists idle in the sidebar —
+and under them, the **Watchtower panel already populated** with findings that
+arrived on a schedule while nobody was here. Do not click anything yet. Let the
+panel be visible behind the first line.
 
 > *"Midnight Marquee premieres globally in five minutes. Six things can go wrong
 > tonight — a rights holder underpaid, an ad slot gone blank, a bot ring watching
@@ -46,7 +49,11 @@ Screen: the Control Room console, empty, six specialists idle in the sidebar.
 > leaving. Most studios run six separate tools for these, and none of them talk
 > to each other."*
 
-## 0:18–1:05 — The incident  *(Quality of idea — the money shot)*
+The panel is doing work in this shot even though you never mention it. A viewer
+registers that the system arrived with information before anyone asked, and the
+beat at 2:05 pays it off.
+
+## 0:20–1:00 — The incident  *(Quality of idea — the money shot)*
 
 Click preset 01: *"What happened during the Midnight Marquee premiere in Brazil?
 Check both playback health and ad revenue, and tell me whether they share a root
@@ -73,7 +80,7 @@ Say the architectural line out loud — it is the differentiator:
 > return their findings. As sub-agents they take over the conversation and never
 > hand it back, and the orchestrator never sees two findings at once."*
 
-## 1:05–1:45 — Chain of Title  *(Technological implementation)*
+## 1:00–1:35 — Chain of Title  *(Technological implementation)*
 
 Click preset 02: *"Audit the royalty payments for Midnight Marquee. Show me the
 arithmetic behind any discrepancy."*
@@ -86,7 +93,7 @@ threshold, units at the escalated rate above it, expected versus paid, the gap.
 > minutes, attributed ad revenue. Nothing is a magic constant. That is what makes
 > this forensic accounting a lawyer could follow, instead of a dashboard."*
 
-## 1:45–2:12 — Fraud, and restraint  *(Design)*
+## 1:35–1:58 — Fraud, and restraint  *(Design)*
 
 Preset 03. One device fingerprint shared across 90 accounts, corroborated by
 impossible travel and session concurrency — and note what it does **not** flag:
@@ -98,7 +105,36 @@ data.
 > single-domain question, and the orchestrator routes rather than firing at
 > everything."*
 
-## 2:12–2:42 — Proof, not vibes  *(Technological implementation)*
+## 1:58–2:25 — The Watchtower  *(Potential impact — the differentiator)*
+
+Everything so far answered a question somebody asked. This beat is the one
+where the system acts on its own, and it is the hardest thing here to copy.
+
+Scroll the sidebar to the **Watchtower** panel and click the top finding. It
+opens in the feed under a header that says what it is: *ran on schedule,
+consulting premiere_pulse and ghost_ads. Nobody asked for this.* Point at the
+timestamp — it was produced before you sat down.
+
+> *"That report was not written for me. Cloud Scheduler called the fleet on the
+> hour, Control Room ran a standing brief, two specialists queried ClickHouse,
+> and it filed a root cause with an `alert` severity it assigned itself —
+> while nobody was watching. The panel was already full when this recording
+> started."*
+
+Then show `deploy/schedule.sh` for two seconds, or the `/api/watch/status`
+JSON, and say the architectural line:
+
+> *"A CDN node does not fail at a convenient hour. The trigger is a clock, not
+> a request — and because an investigation takes minutes, the endpoint hands it
+> to a background task and returns immediately. The fleet keeps working long
+> after the caller has gone."*
+
+If you want it live, press **Sweep now** at the start of the 0:20 beat and let
+it run underneath everything else; it lands during this one. Cut to the new
+finding appearing. Only do this if you have already rehearsed it — the sweep
+takes about two minutes and a failed one on camera costs more than it buys.
+
+## 2:25–2:48 — Proof, not vibes  *(Technological implementation)*
 
 Cut to a terminal. Run `python clickhouse/verify_anomalies.py` — **20 checks**
 against live ClickHouse. Then show the ADK rubric eval command.
@@ -109,13 +145,14 @@ against live ClickHouse. Then show the ADK rubric eval command.
 > same ground-truth file. Two of them check the agents do not invent findings
 > that aren't there."*
 
-## 2:42–3:00 — Close  *(Potential impact)*
+## 2:48–3:00 — Close  *(Potential impact)*
 
 Show `design/the-backlot-architecture.png` for three seconds — the two-way arrows
 between Control Room and the fleet are the whole story in one frame.
 
-> *"Six specialists, one ClickHouse foundation, one orchestrator that connects the
-> dots. Gemini 2.5 on Vertex AI, the Agent Development Kit, and the official
+> *"Six specialists, one ClickHouse foundation, one orchestrator that connects
+> the dots — and keeps connecting them at four in the morning when nobody is
+> asking. Gemini 2.5 on Vertex AI, the Agent Development Kit, and the official
 > ClickHouse MCP server — live, end to end. This is The Backlot."*
 
 ---
@@ -123,6 +160,9 @@ between Control Room and the fleet are the whole story in one frame.
 ## Recording checklist
 
 - [ ] `python clickhouse/verify_anomalies.py` → **20/20**. If it fails, the demo will too
+- [ ] **Watchtower panel populated before you record.** It is the 1:58 beat and
+      half the cold open. If the deployed scheduler has not run recently, force
+      one an hour ahead: `curl -X POST "$URL/api/watch/run?force=true" -H "X-Watch-Token: $TOKEN"`
 - [ ] Warm-up investigation run a few minutes before, so no cold start on camera
 - [ ] Recording against the **deployed Cloud Run URL**, not localhost
 - [ ] 1080p or better; agent responses legible at full screen

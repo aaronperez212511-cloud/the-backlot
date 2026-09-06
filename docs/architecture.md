@@ -73,6 +73,17 @@ Three cases score positive findings (correlation, royalty audit, fraud ranking).
 - `/` — the **Control Room console** (`web/index.html`): the six specialists as live status indicators, preset investigation scenarios, and for every answer an expandable trace of which specialists were consulted and the exact SQL each one ran against ClickHouse. The correlation claim is the product's whole thesis, so it has to be visible, not just asserted in a README.
 - `/adk` — the complete ADK API, including its developer UI at `/adk/dev-ui/` for raw event traces.
 - `/api/health` — liveness. NOT `/healthz`: Google Front End intercepts that exact path on Cloud Run and returns its own 404 before the request reaches the app.
+- `/api/watch/*` — the Watchtower. `POST /api/watch/run` triggers a sweep, `GET /api/watch/findings` reads what previous sweeps concluded, `GET /api/watch/status` reports each watch's cadence and health.
+
+## The unattended path
+
+`common/watchtower.py` is the only code in this repo that reaches the agents with no user in the call stack. Four standing briefs run against the same `control_room` orchestrator on a schedule; each finding is triaged by the orchestrator into `alert` / `notice` / `clear`, written to `backlot.watch_findings`, and read back by the console on load.
+
+Three decisions are worth recording, because each was forced by something that went wrong:
+
+- **Cloud Scheduler, not an in-process loop.** Cloud Run freezes an idle instance's CPU and scales to zero, so a `while True: sleep` scheduler inside the container stops running under exactly the conditions an unattended watch exists to cover. `WATCH_INTERVAL_MIN` still starts an in-process loop, but only so a laptop can demonstrate the behaviour without any GCP setup — it is not the production trigger.
+- **`202 Accepted`, not a held connection.** An investigation is minutes of Gemini reasoning and ClickHouse round trips. Cloud Scheduler treats a slow reply as a failure worth retrying, and a retried sweep landing on top of a running one doubles Gemini load precisely when it is already slow. The endpoint hands the work to a background task and answers immediately; a module-level `set` holds the task, because the event loop keeps only a weak reference to a bare `asyncio.create_task` and the collector will otherwise cancel a sweep mid-investigation.
+- **Verify the fleet actually ran, then retry once.** The first live sweep found the seeded Brazil incident correctly but reported ad revenue as unknown: Gemini had emitted a malformed function call for `ghost_ads`, so the specialist was recorded as *consulted* and never answered. Interactively a human just asks again. Unattended, nobody does — so each `Watch` declares the specialists it cannot do without, the trace is checked for a `reply` from each after the run, and a hollow investigation is repeated once. A second failure is reported rather than hidden: a watch that quietly covers half its domain is worse than one that says so.
 
 ## Deployment
 

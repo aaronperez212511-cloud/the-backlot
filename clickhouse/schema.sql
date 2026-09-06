@@ -128,3 +128,31 @@ CREATE TABLE IF NOT EXISTS backlot.sentiment_events
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(event_time)
 ORDER BY (title_id, event_time);
+
+-- Fact: findings the fleet produced on its own initiative, with no human in
+-- the loop. Written by the Watchtower (common/watchtower.py) on a schedule
+-- rather than by somebody asking a question — which is the entire point. An
+-- operations centre that only answers when addressed finds nothing at 3am,
+-- and a studio's worst night is not a business-hours event.
+--
+-- `severity` is the orchestrator's own triage of what it found, not a
+-- threshold applied afterwards: 'alert' (act now), 'notice' (worth a look),
+-- 'clear' (checked, nothing there). Storing 'clear' matters as much as the
+-- rest — a watch that reports nothing is evidence the sweep ran, and without
+-- it silence is indistinguishable from a crashed scheduler.
+CREATE TABLE IF NOT EXISTS backlot.watch_findings
+(
+    found_at     DateTime,
+    watch_id     LowCardinality(String),
+    watch_name   String,
+    severity     LowCardinality(String),
+    headline     String,
+    body         String,
+    specialists  Array(LowCardinality(String)),
+    queries      UInt16,
+    duration_s   Float32,
+    session_id   String
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMMDD(found_at)
+ORDER BY (watch_id, found_at);

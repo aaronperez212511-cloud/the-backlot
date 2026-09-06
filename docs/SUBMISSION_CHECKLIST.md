@@ -19,10 +19,10 @@
 
 | Criterion | What it asks | Where we stand |
 |---|---|---|
-| Technological implementation | How well is it built, how effectively does it use Google Cloud and the partner service? | Six ADK agents + `AgentTool` orchestration, two deliberate model tiers, MCP toolset, ADK rubric eval, Cloud Run deploy. |
-| Design | A complete, coherent product experience — not a technical proof of concept | The Control Room console (`web/index.html`), not the ADK dev UI. Preset investigations, live specialist status, and the actual SQL each agent ran. |
-| Potential impact | Credible, specific case for solving a real problem for a real audience | Six documented industry pain points; findings are dollar-denominated and traceable to raw warehouse aggregates. |
-| Quality of idea | Creative, non-obvious use of the services; genuine understanding of the problem | One shared data foundation with cross-domain correlation, rather than six point tools. Ground truth + negative eval cases show the problem was actually thought through. |
+| Technological implementation | How well is it built, how effectively does it use Google Cloud and the partner service? | Six ADK agents + `AgentTool` orchestration, two deliberate model tiers, MCP toolset, ADK rubric eval, Cloud Run deploy, Cloud Scheduler driving unattended sweeps. |
+| Design | A complete, coherent product experience — not a technical proof of concept | The Control Room console (`web/index.html`), not the ADK dev UI. Preset investigations, live specialist status, the actual SQL each agent ran, and a Watchtower panel that fills itself in. |
+| Potential impact | Credible, specific case for solving a real problem for a real audience | Six documented industry pain points; findings are dollar-denominated and traceable to raw warehouse aggregates — and arrive before anyone asks, which is the difference between a dashboard and an operations centre. |
+| Quality of idea | Creative, non-obvious use of the services; genuine understanding of the problem | One shared data foundation with cross-domain correlation, rather than six point tools. The correlation runs unprompted on a schedule. Ground truth + negative eval cases show the problem was actually thought through. |
 
 ## Findings and learnings — raw material for the write-up
 
@@ -46,6 +46,8 @@ The rules ask for this explicitly. The most substantive ones, all discovered by 
 
 - [ ] Flip the GitHub repo to **public** and confirm the MIT license shows in the "About" panel
 - [ ] Deploy and smoke-test the hosted URL from a logged-out browser
+- [ ] `./deploy/schedule.sh` — put the Watchtower on its clock, then `gcloud scheduler jobs run backlot-watchtower ...` once and confirm findings appear at `/api/watch/findings`. The panel being populated is half the cold open and the whole 1:58 beat of the video
+- [ ] Apply the schema on the deployed instance's database (`watch_findings` is new — `python clickhouse/apply_schema.py`)
 - [ ] Re-run `verify_anomalies.py` against whatever data the deployed instance points at
 - [ ] Record, caption and publish the video
 - [ ] Decide what to do about the `Co-Authored-By` trailer on the initial commit (see repo history) — the rules bar non-Google **AI tooling in the project**, which is about the runtime stack rather than the editor, but the trailer is a gratuitous flag in a repo that gets automated first-round screening

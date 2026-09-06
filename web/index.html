@@ -6,7 +6,7 @@
 <title>The Backlot — Control Room</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Italiana&display=swap" rel="stylesheet">
 <style>
   /* Pinyon Script, self-hosted from web/marks/ — SIL Open Font License 1.1,
      so it ships with the repository. Used only for the letters in the
@@ -162,6 +162,49 @@
   }
   .stack dd { margin: 0; font: 400 11px/1.5 var(--mono); color: var(--muted); }
 
+  /* ── Watchtower ─────────────────────────────────────────────────────── */
+  /* Findings the fleet produced with nobody in the room. Deliberately styled
+     as a log rather than as notifications: these are not alerts demanding a
+     click, they are a record that the sweep ran and what it concluded. */
+  .wt-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .wt-head .lbl { margin-bottom: 0; }
+  .wt-run {
+    font: 400 9px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase;
+    color: var(--brass-lo); background: none; border: 1px solid var(--line);
+    border-radius: 3px; padding: 5px 8px; cursor: pointer;
+    transition: color .3s ease, border-color .3s ease;
+  }
+  .wt-run:hover:not(:disabled) { color: var(--brass); border-color: var(--brass-lo); }
+  .wt-run:disabled { opacity: .45; cursor: default; }
+  #watch { margin-top: 16px; }
+  .wf {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: none; border: 0; border-left: 2px solid var(--line);
+    padding: 0 0 0 11px; margin-bottom: 15px;
+    transition: border-color .3s ease;
+  }
+  .wf:hover { border-left-color: var(--brass-lo); }
+  .wf .hl {
+    font: 400 12px/1.5 var(--sans); color: var(--muted);
+    /* Two lines, then ellipsis. The brief asks the orchestrator for a
+       ≤120-char headline precisely so this almost never truncates — but a
+       model that overruns it must not be allowed to blow out the sidebar. */
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .wf.alert  .hl { color: var(--ivory); }
+  .wf.alert  { border-left-color: var(--red); }
+  .wf.notice { border-left-color: var(--brass-lo); }
+  .wf.clear  { border-left-color: var(--line); }
+  .wf .meta {
+    margin-top: 5px; font: 400 9.5px/1.4 var(--mono); color: var(--dim);
+    letter-spacing: .04em;
+  }
+  .wf.alert .meta em { color: var(--red); font-style: normal; }
+  .wf.notice .meta em { color: var(--brass-lo); font-style: normal; }
+  .wf.clear .meta em { color: var(--green); font-style: normal; }
+  .wt-empty { font: 300 11.5px/1.6 var(--sans); color: var(--dim); }
+
   /* ── Feed ───────────────────────────────────────────────────────────── */
   section { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   #feed { flex: 1; overflow-y: auto; padding: 44px 46px; }
@@ -294,6 +337,61 @@
     color: var(--dim); letter-spacing: .04em;
   }
 
+  /* ── Splash ─────────────────────────────────────────────────────────── */
+  /* A title card ahead of the console, in the same voice as the print plate
+     (Plate VI's header caption, wordmark and footer) — the one place in the
+     live product where that specimen-plate framing gets to run full-screen.
+     Dismisses itself once the session connects, or on the first click/key. */
+  #splash {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 50px 32px; text-align: center;
+    transition: opacity .9s ease, visibility .9s ease;
+  }
+  #splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  #splash .sp-row {
+    display: flex; justify-content: space-between; gap: 24px;
+    width: 100%; max-width: 900px;
+    font: 400 10px/1 var(--mono); letter-spacing: .28em; text-transform: uppercase; color: var(--dim);
+  }
+  #splash .sp-row span:nth-child(2) { color: var(--muted); }
+  /* The idle mark spins slowly rather than sitting static — the same `spin`
+     keyframe the working-indicator already uses elsewhere, just much slower,
+     so the splash reads as a living machine rather than a parked icon. */
+  #splash .sp-logo { width: 190px; height: 190px; margin: 54px 0 20px; animation: spin 16s linear infinite; }
+  #splash .sp-word {
+    font: 400 68px/1 "Italiana", serif; letter-spacing: .04em;
+    background: linear-gradient(180deg, #fffae7 0%, #ffeeba 13%, #e8c874 29%,
+      #a8813a 43%, #543c14 50%, #f5dc9a 56%, #ffeec0 71%, #fffbf0 87%, #c9a961 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  #splash .sp-sub {
+    font: 400 22px/1 "Italiana", serif; letter-spacing: .32em; text-transform: uppercase;
+    color: var(--brass); margin: 12px 0 50px;
+  }
+  #splash .sp-fleet { display: flex; gap: 26px; margin-bottom: 46px; flex-wrap: wrap; justify-content: center; }
+  /* Reuses .agent wholesale (roster item, blade mark, name) rather than a
+     second copy of that markup — only the layout changes: a column instead
+     of a row, and "done" rather than a live state, so every blade shows lit. */
+  #splash .sp-fleet .agent { flex-direction: column; padding: 0; border: 0; background: none; gap: 9px; margin: 0; }
+  #splash .sp-fleet .mk { width: 58px; height: 58px; }
+  #splash .sp-fleet .nm { font-size: 10px; letter-spacing: .06em; }
+  #splash .sp-foot { max-width: 900px; margin-bottom: 8px; }
+  #splash .sp-enter {
+    font: 400 9.5px/1 var(--mono); letter-spacing: .22em; text-transform: uppercase;
+    color: var(--dim); animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  @media (max-width: 640px) {
+    #splash .sp-logo { width: 140px; height: 140px; margin: 34px 0 14px; }
+    #splash .sp-word { font-size: 42px; }
+    #splash .sp-sub { font-size: 16px; letter-spacing: .24em; margin-bottom: 34px; }
+    #splash .sp-fleet { gap: 16px; margin-bottom: 30px; }
+    #splash .sp-fleet .mk { width: 44px; height: 44px; }
+    #splash .sp-cap span:nth-child(2) { display: none; }
+  }
+
   @media (max-width: 900px) {
     aside { display: none; }
     header { padding: 14px 18px; gap: 12px; }
@@ -309,6 +407,16 @@
 </style>
 </head>
 <body>
+
+<div id="splash">
+  <div class="sp-row sp-cap"><span>Plate VI</span><span>Atlas of Reflective Forms</span><span>Six-Bladed Aperture</span></div>
+  <svg class="sp-logo" viewBox="0 0 100 100" aria-hidden="true"><use href="#aperture"/></svg>
+  <div class="sp-word">The Backlot</div>
+  <div class="sp-sub">Control Room</div>
+  <div class="sp-fleet" id="splashFleet"></div>
+  <div class="sp-row sp-foot"><span>Aurum Reflex</span><span>One Light &nbsp;&middot;&nbsp; Two Metals</span></div>
+  <div class="sp-enter">click, or wait, to enter</div>
+</div>
 
 <header>
   <div class="brand">
@@ -504,6 +612,15 @@
   <aside>
     <p class="lbl">Specialist fleet</p>
     <div id="roster"></div>
+
+    <div class="stack">
+      <div class="wt-head">
+        <p class="lbl">Watchtower</p>
+        <button class="wt-run" id="wtRun" title="Run a sweep now instead of waiting for the schedule">Sweep now</button>
+      </div>
+      <div id="watch"></div>
+    </div>
+
     <div class="stack">
       <p class="lbl" style="margin-bottom:16px">Runtime</p>
       <dl>
@@ -657,12 +774,125 @@ function setAgent(name, cls) {
 }
 function resetRoster() { AGENTS.forEach(([n]) => setAgent(n, "idle")); }
 
+function drawSplashFleet() {
+  const el = document.getElementById("splashFleet");
+  if (!el) return;
+  // Always "done": the splash is a title card, not a live status board, so
+  // every blade shows lit rather than idle.
+  el.innerHTML = AGENTS.map(([n], i) =>
+    `<div class="agent done">${markFor(i, "mk")}<div class="nm">${n}</div></div>`).join("");
+  fitBladeLetters(el);
+  document.fonts.ready.then(() => fitBladeLetters(el));
+}
+
+function dismissSplash() {
+  const el = document.getElementById("splash");
+  if (!el || el.classList.contains("hide")) return;
+  el.classList.add("hide");
+  setTimeout(() => el.remove(), 950);
+  document.removeEventListener("keydown", dismissSplash);
+  document.removeEventListener("pointerdown", dismissSplash);
+}
+// Impatient users can skip it; everyone else gets it for at least as long as
+// boot() takes to connect, up to a hard cap so a stalled connection never
+// strands the splash on screen.
+document.addEventListener("keydown", dismissSplash);
+document.addEventListener("pointerdown", dismissSplash);
+setTimeout(dismissSplash, 5000);
+
 function drawPresets() {
   $("#presets").innerHTML = PRESETS.map(([q, why], i) =>
     `<button class="preset" data-i="${i}"><span class="n">0${i + 1}</span>
        <span>${esc(q)}<i>${why}</i></span></button>`).join("");
   document.querySelectorAll(".preset").forEach(b =>
     b.onclick = () => ask(PRESETS[+b.dataset.i][0]));
+}
+
+/* ── Watchtower ───────────────────────────────────────────────────────────
+   Everything else in this console is a request the user made. This panel is
+   the one part that fills itself in: findings the fleet produced on a
+   schedule, with nobody in the room, read back from ClickHouse on load. */
+function ago(iso) {
+  const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
+  if (s < 90) return "just now";
+  if (s < 3600) return Math.round(s / 60) + "m ago";
+  if (s < 86400) return Math.round(s / 3600) + "h ago";
+  return Math.round(s / 86400) + "d ago";
+}
+
+let watchNewest = "";
+
+async function drawWatch() {
+  const el = $("#watch");
+  if (!el) return "";
+  let found = [];
+  try {
+    const r = await fetch("/api/watch/findings?limit=6");
+    if (r.ok) found = (await r.json()).findings || [];
+  } catch { /* the console is fully usable without the panel */ }
+
+  if (!found.length) {
+    el.innerHTML = `<p class="wt-empty">Nothing unprompted yet. The fleet sweeps
+      on a schedule — <em>Sweep now</em> starts one immediately.</p>`;
+    return "";
+  }
+  el.innerHTML = found.map((f, i) => `
+    <button class="wf ${esc(f.severity)}" data-i="${i}">
+      <div class="hl">${esc(f.headline)}</div>
+      <div class="meta"><em>${esc(f.severity)}</em> &middot; ${esc(ago(f.found_at))}
+        &middot; ${f.specialists.length} specialist${f.specialists.length === 1 ? "" : "s"}
+        &middot; ${f.queries} quer${f.queries === 1 ? "y" : "ies"}</div>
+    </button>`).join("");
+  el.querySelectorAll(".wf").forEach(b =>
+    b.onclick = () => openFinding(found[+b.dataset.i]));
+  return found[0].found_at;
+}
+
+/* Opens an autonomous finding in the feed, framed as what it is. The "who"
+   line matters: without it this is indistinguishable from an answer someone
+   asked for, and the whole claim is that nobody did. */
+function openFinding(f) {
+  $("#empty")?.remove();
+  const turn = document.createElement("div");
+  turn.className = "turn";
+  turn.innerHTML =
+    `<div class="you"><div class="who">Watchtower &middot; unprompted</div>
+       <div class="qt">${esc(f.watch_name)} — ran on schedule ${esc(ago(f.found_at))},
+         consulting ${f.specialists.map(esc).join(", ") || "no specialists"}.
+         Nobody asked for this.</div></div>
+     <div class="answer"><div class="who">Control Room</div>
+       <div class="md">${md(f.body)}</div></div>`;
+  feed.appendChild(turn);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+/* Runs the cross-domain watch on demand — one investigation, not all four.
+   A full forced sweep is four of them and takes the better part of ten
+   minutes, which is the wrong thing to put behind a button someone presses
+   during a demo. */
+async function sweepNow() {
+  const b = $("#wtRun");
+  if (b.disabled) return;
+  b.disabled = true;
+  b.textContent = "Sweeping…";
+  try {
+    const r = await fetch("/api/watch/run?only=incident_correlation", { method: "POST" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    // 202 Accepted: the fleet keeps working for minutes after this resolves,
+    // so there is nothing to await. Poll until a finding newer than the one
+    // already on screen shows up, then stop.
+    const before = watchNewest;
+    for (let i = 0; i < 40; i++) {
+      await new Promise(r => setTimeout(r, 15000));
+      const newest = await drawWatch();
+      if (newest && newest !== before) { watchNewest = newest; break; }
+    }
+  } catch (e) {
+    b.title = "Sweep failed: " + e.message;
+  } finally {
+    b.disabled = false;
+    b.textContent = "Sweep now";
+  }
 }
 
 async function newSession() {
@@ -675,7 +905,19 @@ async function newSession() {
 }
 
 async function boot() {
-  drawRoster(); drawPresets();
+  drawRoster(); drawPresets(); drawSplashFleet();
+  // Not awaited: the panel reads a ClickHouse table that may be waking from
+  // auto-suspend, and the console must not sit behind it.
+  drawWatch().then(newest => { watchNewest = newest; });
+  $("#wtRun").onclick = sweepNow;
+  // Findings arrive from Cloud Scheduler while this page is open, so the
+  // panel refreshes itself. Five minutes: the sweep cadence is hourly, and a
+  // tighter poll would only be querying ClickHouse to find nothing.
+  setInterval(() => { if (!$("#wtRun").disabled) drawWatch(); }, 300000);
+  // The splash stays up at least this long regardless of connection speed —
+  // long enough to actually be seen, not so long it feels like a wait.
+  const minShow = new Promise(r => setTimeout(r, 1500));
+  let connected = true;
   try {
     await newSession();
     $("#cdot").className = "dot live";
@@ -683,8 +925,11 @@ async function boot() {
   } catch (e) {
     $("#cdot").className = "dot err";
     $("#ctext").textContent = "offline";
-    return;
+    connected = false;
   }
+  await minShow;
+  dismissSplash();
+  if (!connected) return;
   // Deep links. ?ask=2 fires preset 2, ?q=<text> asks anything — so a single
   // URL reproduces an investigation exactly, for a screenshot, a recording, or
   // a judge who would rather click than type.
