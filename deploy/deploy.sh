@@ -32,6 +32,15 @@ gcloud run deploy "$SERVICE" \
   --cpu 2 \
   --timeout 600 \
   --concurrency 8 \
+  `# CPU always allocated, not just while a request is in flight. The\
+   # Watchtower answers POST /api/watch/run with 202 in milliseconds and then\
+   # investigates for minutes in a background task — under Cloud Run's default\
+   # throttling that background work runs on a starved instance. It did not\
+   # fail cleanly: the cross-domain watch hit its timeout, and chain_of_title\
+   # reported "Tool 'run_query' not found" because the mcp-clickhouse\
+   # subprocess could not finish starting inside its connect timeout, which\
+   # reads as an MCP bug rather than a CPU one.` \
+  --no-cpu-throttling \
   --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION},GOOGLE_GENAI_USE_VERTEXAI=TRUE" \
   --set-secrets "CLICKHOUSE_HOST=clickhouse-host:latest,CLICKHOUSE_USER=clickhouse-user:latest,CLICKHOUSE_PASSWORD=clickhouse-password:latest,WATCH_TOKEN=watch-token:latest"
 

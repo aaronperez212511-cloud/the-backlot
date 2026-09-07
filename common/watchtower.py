@@ -54,16 +54,28 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 APP_NAME = "watchtower"
 
-# One investigation is already a burst: Control Room fans out to several
-# specialists, each making its own Gemini calls against Vertex AI's dynamic
-# shared quota (see common/models.py). Running four watches at once multiplies
-# that by four and turns a sweep into a reliable way to generate 429s. Two at a
-# time keeps a sweep inside a few minutes without stampeding the quota.
-WATCH_CONCURRENCY = int(os.environ.get("WATCH_CONCURRENCY", "2"))
+# Serial, not parallel. One investigation is already a burst — Control Room
+# fans out to several specialists, each making its own Gemini calls against
+# Vertex AI's dynamic shared quota (see common/models.py) — and each specialist
+# also spawns an mcp-clickhouse subprocess.
+#
+# Two at a time was the first setting and it failed in production in two ways
+# at once, both of which looked like unrelated bugs: the cross-domain watch
+# timed out at 440s, and chain_of_title came back "Tool 'run_query' not found",
+# which is the MCP toolset having loaded zero tools because its subprocess
+# never got enough CPU to finish starting inside the 60s connect timeout.
+# Sweeps are hourly and nothing waits on them, so there is no reason to
+# contend with ourselves for CPU and quota.
+WATCH_CONCURRENCY = int(os.environ.get("WATCH_CONCURRENCY", "1"))
 
 # Ceiling on a single watch. A stuck MCP subprocess or a pathological model
 # turn would otherwise hold a slot forever and wedge every later sweep.
-WATCH_TIMEOUT_S = float(os.environ.get("WATCH_TIMEOUT_S", "420"))
+# 420s was tuned against a local run that took 128s; the same watch takes
+# 300-450s on Cloud Run even with CPU always allocated, because six MCP
+# subprocess spawns and a multi-specialist investigation is simply more work
+# than one laptop process. The ceiling exists to catch a hang, not to bound
+# normal slowness, so it is set well clear of it.
+WATCH_TIMEOUT_S = float(os.environ.get("WATCH_TIMEOUT_S", "900"))
 
 _SEVERITIES = ("alert", "notice", "clear")
 
