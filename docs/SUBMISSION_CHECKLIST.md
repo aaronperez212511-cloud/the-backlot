@@ -48,7 +48,8 @@ The rules ask for this explicitly. The most substantive ones, all discovered by 
 - [x] Deploy and smoke-test the hosted URL from a logged-out browser — revision `the-backlot-00021-thd`, `/api/health` green
 - [x] `./deploy/schedule.sh` — Cloud Scheduler job `backlot-watchtower` is ENABLED and firing hourly. Verified end to end: a scheduler-triggered sweep correlated a CDN failure on `us-west-2a` across playback and ad insertion with no human in the loop
 - [x] Apply the schema on the deployed instance's database — `watch_findings` exists and is accumulating; the deployed service and local `.env` point at the same ClickHouse instance
-- [ ] Re-run `verify_anomalies.py` against whatever data the deployed instance points at
+- [x] Re-run `verify_anomalies.py` against whatever data the deployed instance points at — **20/20 on 7 Sep 2026**, against the same ClickHouse instance the deployed service uses
+- [ ] Upload `docs/the-backlot-judges-brief.pdf` to Devpost's *Additional info → Upload a file* (judges only, 35 MB ceiling; the PDF is 1.9 MB)
 - [ ] Record, caption and publish the video
 - [ ] Decide what to do about the `Co-Authored-By` trailer — it is on **27 commits**, not just the initial one, so this is a decision about rewriting the whole history rather than amending one commit. The rules bar non-Google **AI tooling in the project**, which is about the runtime stack rather than the editor, but the trailer is a gratuitous flag in a repo that gets automated first-round screening
 
