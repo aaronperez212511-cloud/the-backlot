@@ -1,0 +1,167 @@
+1
+00:00:02,000 --> 00:00:06,200
+Midnight Marquee premieres globally
+in five minutes.
+
+2
+00:00:06,200 --> 00:00:11,000
+Six things can go wrong tonight: a rights holder
+underpaid, an ad slot gone blank,
+
+3
+00:00:11,000 --> 00:00:15,400
+a bot ring watching for free, a region
+buffering out, an audience quietly leaving.
+
+4
+00:00:15,400 --> 00:00:20,000
+Most studios run six separate tools for these,
+and none of them talk to each other.
+
+5
+00:00:21,000 --> 00:00:25,500
+One question that spans two domains:
+playback health, and ad revenue.
+
+6
+00:00:26,000 --> 00:00:30,000
+Two specialists light up. Neither was
+named in the question.
+
+7
+00:00:31,000 --> 00:00:35,500
+This is the real activity trace: the SQL
+each specialist ran against ClickHouse.
+
+8
+00:00:37,000 --> 00:00:41,500
+Two specialists, two domains, two symptoms
+- one root cause.
+
+9
+00:00:41,500 --> 00:00:46,500
+Neither could have said that alone. The playback
+agent cannot see ad revenue,
+
+10
+00:00:46,500 --> 00:00:50,500
+and the ads agent cannot see CDN telemetry.
+
+11
+00:00:50,500 --> 00:00:55,000
+That correlation is the entire reason
+this is a fleet and not six demos.
+
+12
+00:00:55,500 --> 00:01:00,500
+In ADK this only works because the specialists
+are attached as tools that return their findings.
+
+13
+00:01:00,500 --> 00:01:05,000
+As sub-agents they take over the conversation
+and never hand it back.
+
+14
+00:01:07,000 --> 00:01:12,000
+Now the contract itself. Gemini reads the raw
+clause and turns prose into computable terms.
+
+15
+00:01:13,000 --> 00:01:18,000
+Units at the base rate, units at the escalated
+rate, expected versus paid, and the gap.
+
+16
+00:01:19,500 --> 00:01:24,500
+Every number here is re-derivable from the
+warehouse. Nothing is a magic constant.
+
+17
+00:01:24,500 --> 00:01:30,000
+That is what makes this forensic accounting
+a lawyer could follow, instead of a dashboard.
+
+18
+00:01:36,000 --> 00:01:41,000
+One device fingerprint across ninety accounts,
+corroborated by impossible travel.
+
+19
+00:01:41,500 --> 00:01:46,000
+The ring is hiding in a realistic crowd.
+Fan-out alone is not fraud.
+
+20
+00:01:46,500 --> 00:01:52,000
+And notice it consulted one specialist, not six.
+This is a single-domain question,
+
+21
+00:01:52,000 --> 00:01:57,000
+and the orchestrator routes rather than
+firing at everything.
+
+22
+00:01:59,000 --> 00:02:04,000
+That report was not written for me.
+Cloud Scheduler called the fleet on the hour.
+
+23
+00:02:04,000 --> 00:02:09,500
+Control Room ran a standing brief, two specialists
+queried ClickHouse, and it filed a root cause
+
+24
+00:02:09,500 --> 00:02:14,000
+with an alert severity it assigned itself,
+while nobody was watching.
+
+25
+00:02:14,000 --> 00:02:18,000
+The panel was already full when this
+recording started.
+
+26
+00:02:18,500 --> 00:02:22,500
+A CDN node does not fail at a convenient hour.
+The trigger is a clock, not a request.
+
+27
+00:02:22,500 --> 00:02:26,500
+The endpoint returns immediately and the fleet
+keeps working long after the caller has gone.
+
+28
+00:02:28,000 --> 00:02:33,000
+The ground truth is in the repo. This asserts
+every seeded anomaly against the live database,
+
+29
+00:02:33,000 --> 00:02:37,500
+including that the decoys exist,
+so detection is not trivial.
+
+30
+00:02:38,000 --> 00:02:43,500
+And ADK's rubric judge scores the fleet against
+23 rubrics from that same ground-truth file.
+
+31
+00:02:43,500 --> 00:02:48,000
+Two of them check the agents do not invent
+findings that aren't there.
+
+32
+00:02:49,500 --> 00:02:54,000
+Six specialists, one ClickHouse foundation,
+one orchestrator that connects the dots.
+
+33
+00:02:54,000 --> 00:02:58,000
+Gemini 2.5 on Vertex AI, the Agent Development Kit,
+and the official ClickHouse MCP server.
+
+34
+00:02:58,000 --> 00:03:00,000
+Live, end to end. This is The Backlot.
