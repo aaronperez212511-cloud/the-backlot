@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -116,7 +117,14 @@ def _authorise(token: str | None) -> None:
     wrong in production — deploy/schedule.sh sets it.
     """
     expected = os.environ.get("WATCH_TOKEN")
-    if expected and token != expected:
+    if not expected:
+        return
+    # compare_digest, not ==. Python's string equality returns as soon as two
+    # bytes differ, so how long the comparison takes leaks how much of the
+    # token was right, and this endpoint is reachable by anyone on the
+    # internet. The cost of not caring is a slow guessing oracle; the cost of
+    # caring is one import.
+    if not token or not secrets.compare_digest(token, expected):
         raise HTTPException(status_code=401, detail="bad or missing X-Watch-Token")
 
 

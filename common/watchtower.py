@@ -274,7 +274,13 @@ def parse_verdict(answer: str) -> tuple[str, str, str]:
     for i, ln in enumerate(lines[:4]):
         low = ln.lower().replace("*", "").replace("`", "").strip()
         if low.startswith("severity:"):
-            token = low.split(":", 1)[1].strip().split()[0] if ":" in low else ""
+            # `.split()[0]` on an empty tail raises IndexError, and a reply of
+            # exactly "SEVERITY:" with nothing after it is a thing a model
+            # does. That crash propagated out of the one function written to
+            # never lose a finding, into the handler that records the watch as
+            # failed — discarding a complete report over a missing word.
+            tail = low.split(":", 1)[1].split()
+            token = tail[0] if tail else ""
             if token in _SEVERITIES:
                 severity = token
                 rest = [x.strip() for x in lines[i + 1:]]
@@ -344,6 +350,11 @@ async def run_watch(watch: Watch) -> dict[str, Any]:
     st.running = True
     started = time.monotonic()
     sessions: list[str] = []
+    # One deadline for the watch, not one per attempt. Putting the timeout
+    # inside investigate() meant a retried watch got the full budget twice and
+    # could hold the sweep for half an hour — and because concurrency is 1,
+    # holding the sweep means every other watch silently misses its turn.
+    deadline = asyncio.get_running_loop().time() + WATCH_TIMEOUT_S
 
     async def investigate() -> tuple[str, str]:
         """One full pass. Returns (session_id, answer)."""
@@ -362,7 +373,7 @@ async def run_watch(watch: Watch) -> dict[str, Any]:
         message = types.Content(
             role="user", parts=[types.Part(text=watch.brief + TRIAGE)]
         )
-        async with asyncio.timeout(WATCH_TIMEOUT_S):
+        async with asyncio.timeout_at(deadline):
             async for event in runner.run_async(
                 user_id="watchtower", session_id=session_id, new_message=message
             ):
@@ -406,7 +417,7 @@ async def run_watch(watch: Watch) -> dict[str, Any]:
             "duration_s": round(duration, 2),
             "session_id": session_id,
         }
-        _persist(record)
+        await asyncio.to_thread(_persist, record)
 
         st.last_severity = severity
         st.runs += 1
@@ -433,7 +444,7 @@ async def run_watch(watch: Watch) -> dict[str, Any]:
             "session_id": sessions[-1] if sessions else "",
         }
         try:
-            _persist(record)
+            await asyncio.to_thread(_persist, record)
         except Exception:  # noqa: BLE001 — ClickHouse itself may be what failed
             pass
         return record
@@ -453,16 +464,40 @@ _COLUMNS = ["found_at", "watch_id", "watch_name", "severity", "headline", "body"
             "specialists", "queries", "duration_s", "session_id"]
 
 
-def _persist(record: dict[str, Any]) -> None:
-    client = _client()
-    try:
-        client.insert(
-            "watch_findings",
-            [[record[c] for c in _COLUMNS]],
-            column_names=_COLUMNS,
-        )
-    finally:
-        client.close()
+def _persist(record: dict[str, Any], attempts: int = 3) -> None:
+    """Writes one finding, retrying a transient failure.
+
+    This is the last step of a pipeline that just spent several minutes of
+    Gemini reasoning and a dozen ClickHouse round trips. Losing all of that to
+    one refused connection would be absurd, and it is a live possibility:
+    ClickHouse Cloud auto-suspends, and the first connection after idle can be
+    refused or slow while the instance wakes. Three tries with a widening gap
+    covers a wake-up; a real outage still fails, and the caller records that.
+
+    Synchronous, and called with `asyncio.to_thread`. clickhouse_connect has no
+    async client, so the insert already blocks whatever thread it runs on, and
+    the backoff below would block it for seconds more. On the event loop that
+    means the whole FastAPI process stops serving — including the console a
+    judge has open — because a background write is waiting for a database.
+    """
+    last: Exception | None = None
+    for i in range(attempts):
+        try:
+            client = _client()
+            try:
+                client.insert(
+                    "watch_findings",
+                    [[record[c] for c in _COLUMNS]],
+                    column_names=_COLUMNS,
+                )
+                return
+            finally:
+                client.close()
+        except Exception as exc:  # noqa: BLE001 — retried, then re-raised below
+            last = exc
+            if i < attempts - 1:
+                time.sleep(2 ** i)
+    raise last if last else RuntimeError("insert failed with no exception")
 
 
 def due(now: Optional[float] = None) -> list[Watch]:
@@ -471,7 +506,10 @@ def due(now: Optional[float] = None) -> list[Watch]:
     A watch that has never run is due immediately, so a cold instance produces
     findings on its first sweep instead of staying blank for an hour.
     """
-    now = now or time.time()
+    # `now or time.time()` would treat a caller-supplied 0.0 as "unset". It is
+    # only ever a test passing an epoch, but a falsy-zero default is the kind
+    # of thing that reads as correct forever and then is not.
+    now = time.time() if now is None else now
     out = []
     for w in WATCHES:
         s = _state[w.id]
@@ -500,9 +538,18 @@ async def sweep(force: bool = False, only: Optional[str] = None) -> dict[str, An
     if not watches:
         return {"ran": [], "skipped": "nothing due"}
 
-    if _sweeping:
+    # Checked against the lock rather than against a flag read beforehand.
+    # Testing `_sweeping` and then awaiting the lock is a time-of-check /
+    # time-of-use race: two callers both see False, both queue on the lock, and
+    # the second runs a full duplicate sweep the moment the first finishes —
+    # which is exactly the double Gemini load the guard exists to prevent, only
+    # delayed by twenty minutes so it looks like something else. Cloud
+    # Scheduler retrying while the console's "Sweep now" is in flight is enough
+    # to hit it.
+    if _sweep_lock.locked():
         return {"ran": [], "skipped": "a sweep is already running"}
 
+    results: list[Any] = []
     async with _sweep_lock:
         _sweeping = True
         try:
@@ -533,6 +580,11 @@ async def sweep(force: bool = False, only: Optional[str] = None) -> dict[str, An
 def findings(limit: int = 20, severity: Optional[str] = None) -> list[dict[str, Any]]:
     """Recent autonomous findings, newest first — what the console shows."""
     where = "WHERE severity = %(sev)s" if severity in _SEVERITIES else ""
+    # Interpolated, so it is clamped rather than trusted. int() alone stops
+    # injection but happily passes a negative or a million straight into the
+    # query — one is a syntax error, the other pulls every finding ever written
+    # into memory to render six of them in a sidebar.
+    limit = max(1, min(int(limit), 200))
     client = _client()
     try:
         res = client.query(
@@ -540,7 +592,7 @@ def findings(limit: int = 20, severity: Optional[str] = None) -> list[dict[str, 
                        specialists, queries, duration_s, session_id
                 FROM watch_findings {where}
                 ORDER BY found_at DESC
-                LIMIT {int(limit)}""",
+                LIMIT {limit}""",
             parameters={"sev": severity} if where else None,
         )
         return [

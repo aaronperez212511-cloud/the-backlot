@@ -19,9 +19,13 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = Path(__file__).parent
-FONTS = Path("C:/Users/ferna/AppData/Roaming/Claude/local-agent-mode-sessions"
-             "/skills-plugin/ea1826e4-f23c-46c5-ab19-719d52aee0ae"
-             "/31ed2610-e913-4536-8f24-cc25bf85f158/skills/canvas-design/canvas-fonts")
+# Vendored, not referenced from wherever they happened to be installed. These
+# scripts previously loaded Geist and Italiana from an absolute path on one
+# machine, which meant `python design/render_plate.py` was reproducible for
+# exactly one person: anyone else cloning the repo got FileNotFoundError. Both
+# faces are SIL Open Font License 1.1, so they ship here with their licences,
+# the same arrangement web/marks already uses for Pinyon Script.
+FONTS = HERE / "fonts"
 PINYON = HERE.parent / "web" / "marks" / "PinyonScript-Regular.ttf"
 
 W, H = 2400, 2920           # design units; exported at OUT_W
