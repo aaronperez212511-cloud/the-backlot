@@ -61,21 +61,38 @@ each one refuses to run without. `findings` is the output nobody asked for.
 4. **Zoom to ~110%.** Agent responses have to be legible when the video is
    watched in a small player.
 
-## About the subtitles
+## Spanish audio, English subtitles
 
-`the-backlot-demo.srt` covers the scripted narration and nothing else. Where
-the script has you pointing at the screen in silence — the spinner, the trace
-scroll — there is deliberately no cue, because subtitles should not invent
-speech that was never said.
+You narrate in Spanish. The subtitles are in **English**, and that combination
+is what the rules require:
 
-**The timings are a scaffold, not a transcript.** They are placed against the
-script's beat boundaries assuming a steady reading pace. Record first, then
-drag the cues onto your actual audio in the editor; every cue is short enough
-to move without re-splitting it.
+> "Debe estar en ingles **o** incluir subtitulos en ingles."
 
-If your delivery runs long, the beat with slack is 0:20–1:00 — the
-investigation is running underneath it either way. The beat with none is
-1:58–2:25, which is the differentiator and should not be rushed.
+Audio in Spanish with Spanish subtitles satisfies neither half. Everything
+written that appears on camera - the console, the activity trace, the terminal
+- is already in English, which covers the other half of the same clause.
+
+- **Say:** [`NARRACION_es.md`](NARRACION_es.md) - the Spanish narration, with a
+  measured word budget per beat. Spanish needs more words than English for the
+  same meaning and the beats were already tight, so those blocks are cut to
+  fit. Overrun one and you eat the next beat.
+- **Show:** `the-backlot-demo.srt` - 30 cues, each a faithful translation of a
+  line in that Spanish script, ending exactly at 3:00.
+
+The SRT subtitles the narration and nothing else. Where you are pointing at the
+screen in silence - the spinner, the trace scroll - there is deliberately no
+cue, because subtitles should not invent speech that was never said. That
+accounts for the gaps: 142 seconds of speech inside a 180 second video.
+
+**The timings are a scaffold, not a transcript.** Record first, then drag each
+cue onto where you actually said that line. Every cue is short enough to move
+without re-splitting it, and no line exceeds 46 characters so it stays legible
+in a small player.
+
+If your delivery runs long, the beat with slack is **0:20-1:05** - the
+investigation runs underneath it either way, so you can simply cut more of the
+wait. The beat with none is **1:58-2:25**, which is the differentiator and
+should not be rushed.
 
 ## One honest constraint
 
